@@ -1,0 +1,48 @@
+import React from 'react';
+import { StyleSheet, Text, View, Pressable } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { COLORS } from '../../constants/colors';
+import { AppHeader } from '../../components/AppHeader';
+import { EmptyState } from '../../components/EmptyState';
+import { Screen } from '../../components/Screen';
+import { useNotes } from '../../hooks/useNotes';
+
+export default function TagFilter({ navigation }) {
+  const { notes, getAllTags } = useNotes();
+  const tags = getAllTags();
+  const count = (tag) => notes.filter((note) => note.tags?.includes(tag)).length;
+
+  return (
+    <Screen>
+      <AppHeader title="Tags" onBack={() => navigation.goBack()} />
+      {tags.length ? (
+        <View style={styles.grid}>
+          {tags.map((tag) => (
+            <Pressable key={tag} style={styles.card} onPress={() => navigation.navigate('NotesList', { tag })}>
+              <Ionicons name="pricetag" size={22} color={COLORS.notes} />
+              <Text selectable style={styles.tag}>{tag}</Text>
+              <Text selectable style={styles.count}>{count(tag)} notes</Text>
+            </Pressable>
+          ))}
+        </View>
+      ) : (
+        <EmptyState icon="pricetags-outline" message="No tags yet." />
+      )}
+    </Screen>
+  );
+}
+
+const styles = StyleSheet.create({
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  card: {
+    backgroundColor: COLORS.white,
+    borderColor: COLORS.border,
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 8,
+    padding: 12,
+    width: '48%',
+  },
+  tag: { color: COLORS.textPrimary, fontSize: 15, fontWeight: '600' },
+  count: { color: COLORS.textSecondary, fontSize: 11 },
+});

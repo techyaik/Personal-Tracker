@@ -1,0 +1,101 @@
+import React from 'react';
+import { Alert, StyleSheet, Text, View } from 'react-native';
+import { COLORS } from '../../constants/colors';
+import { CATEGORIES } from '../../constants/categories';
+import { AppHeader } from '../../components/AppHeader';
+import { EmptyState } from '../../components/EmptyState';
+import { HabitRow } from '../../components/Rows';
+import { Screen } from '../../components/Screen';
+import { SectionHeader } from '../../components/SectionHeader';
+import { useHabits } from '../../hooks/useHabits';
+import { displayDate, todayKey } from '../../utils/dates';
+
+export default function HabitsToday({ navigation }) {
+  const { habits, loading, isDone, toggleCompletion, getStreak, getWeekPercents, deleteHabit } = useHabits();
+  const doneCount = habits.filter((habit) => isDone(habit.id)).length;
+  const week = getWeekPercents();
+
+  const quickOptions = (habit) =>
+    Alert.alert(habit.name, 'Quick options', [
+      { text: 'Edit', onPress: () => navigation.navigate('HabitEdit', { habit }) },
+      { text: 'Delete', style: 'destructive', onPress: () => deleteHabit(habit.id) },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+
+  return (
+    <Screen loading={loading}>
+      <AppHeader title="Habits" rightIcon="add" accent={COLORS.habits} onRight={() => navigation.navigate('AddHabit')} />
+      <View style={styles.section}>
+        <SectionHeader>Today — {doneCount} of {habits.length} done</SectionHeader>
+        {habits.length ? (
+          habits.map((habit) => {
+            const category = CATEGORIES.find((item) => item.key === habit.category) || CATEGORIES[CATEGORIES.length - 1];
+            return (
+              <HabitRow
+                key={habit.id}
+                habit={habit}
+                done={isDone(habit.id)}
+                streak={getStreak(habit)}
+                category={category}
+                onToggle={() => toggleCompletion(habit.id)}
+                onPress={() => navigation.navigate('HabitDetail', { habit })}
+                onLongPress={() => quickOptions(habit)}
+              />
+            );
+          })
+        ) : (
+          <EmptyState
+            icon="checkmark-circle-outline"
+            message="No habits yet. Build your first one."
+            actionLabel="+ Add habit"
+            action={() => navigation.navigate('AddHabit')}
+            accent={COLORS.habits}
+          />
+        )}
+      </View>
+      {habits.length ? (
+        <View style={styles.section}>
+          <SectionHeader>Weekly completion</SectionHeader>
+          <View style={styles.weekBars}>
+            {week.map((day) => (
+              <View key={day.date} style={styles.barItem}>
+                <View style={styles.barTrack}>
+                  <View
+                    style={[
+                      styles.barFill,
+                      {
+                        height: `${day.percent}%`,
+                        backgroundColor: day.date === todayKey() ? COLORS.habits : COLORS.tealLight,
+                      },
+                    ]}
+                  />
+                </View>
+                <Text style={styles.dayLabel}>{displayDate(day.date, 'EEE')}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      ) : null}
+    </Screen>
+  );
+}
+
+const styles = StyleSheet.create({
+  section: { gap: 8 },
+  weekBars: {
+    alignItems: 'flex-end',
+    backgroundColor: COLORS.white,
+    borderColor: COLORS.border,
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: 10,
+    justifyContent: 'space-between',
+    minHeight: 128,
+    padding: 12,
+  },
+  barItem: { alignItems: 'center', flex: 1, gap: 6 },
+  barTrack: { backgroundColor: COLORS.surface, borderRadius: 8, height: 76, justifyContent: 'flex-end', overflow: 'hidden', width: 16 },
+  barFill: { borderRadius: 8, width: 16 },
+  dayLabel: { color: COLORS.textHint, fontSize: 10 },
+});
