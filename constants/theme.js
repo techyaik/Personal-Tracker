@@ -17,13 +17,25 @@ export const SPACING = {
 
 export const SHADOWS = {
   soft: {
-    boxShadow: '0 10px 24px rgba(26, 26, 26, 0.08)',
+    shadowColor: COLORS.textPrimary,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.08,
+    shadowRadius: 18,
+    elevation: 4,
   },
   subtle: {
-    boxShadow: '0 4px 14px rgba(26, 26, 26, 0.06)',
+    shadowColor: COLORS.textPrimary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 2,
   },
   glow: {
-    boxShadow: '0 12px 30px rgba(24, 95, 165, 0.18)',
+    shadowColor: COLORS.health,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.18,
+    shadowRadius: 24,
+    elevation: 5,
   },
 };
 

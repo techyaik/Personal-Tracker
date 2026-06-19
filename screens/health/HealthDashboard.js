@@ -25,12 +25,32 @@ export default function HealthDashboard({ navigation }) {
       <View style={styles.section}>
         <SectionHeader>Today — {displayDate(todayKey())}</SectionHeader>
         <View style={styles.grid}>
-          <MetricCard value={today?.weight ? `${today.weight}` : '—'} label="Weight kg" accent={COLORS.health} />
-          <MetricCard value={today?.sleep ? `${today.sleep}` : '—'} label="Sleep hrs" accent={COLORS.health} />
+          <MetricCard
+            value={today?.weight ? `${today.weight}` : '—'}
+            label="Weight kg"
+            accent={COLORS.health}
+            icon={<Ionicons name="scale-outline" size={16} color={COLORS.health} />}
+          />
+          <MetricCard
+            value={today?.sleep ? `${today.sleep}` : '—'}
+            label="Sleep hrs"
+            accent={COLORS.health}
+            icon={<Ionicons name="bed-outline" size={16} color={COLORS.health} />}
+          />
         </View>
         <View style={styles.grid}>
-          <MetricCard value={formatSteps(today?.steps)} label="Steps" accent={COLORS.health} />
-          <MetricCard value={today?.water ? `${today.water}` : '—'} label="Water glasses" accent={COLORS.health} />
+          <MetricCard
+            value={formatSteps(today?.steps)}
+            label="Steps"
+            accent={COLORS.health}
+            icon={<Ionicons name="walk-outline" size={16} color={COLORS.health} />}
+          />
+          <MetricCard
+            value={today?.water ? `${today.water}` : '—'}
+            label="Water glasses"
+            accent={COLORS.health}
+            icon={<Ionicons name="water-outline" size={16} color={COLORS.health} />}
+          />
         </View>
       </View>
 

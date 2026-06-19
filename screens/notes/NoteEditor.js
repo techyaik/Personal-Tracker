@@ -102,15 +102,16 @@ export default function NoteEditor({ navigation, route }) {
         <Tool icon="trash-outline" danger onPress={confirmDelete} />
       </View>
       <Modal visible={tagModal} transparent animationType="fade">
-        <Pressable style={styles.modalBackdrop} onPress={() => setTagModal(false)}>
-          <View style={styles.modalCard}>
+        <View style={styles.modalBackdrop}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => setTagModal(false)} />
+          <Pressable style={styles.modalCard}>
             <Text style={styles.modalTitle}>Add tag</Text>
             <InputField value={newTag} onChangeText={setNewTag} placeholder="Tag name" autoFocus />
             <Pressable onPress={addTag} style={styles.modalButton}>
               <Text style={styles.modalButtonText}>Add</Text>
             </Pressable>
-          </View>
-        </Pressable>
+          </Pressable>
+        </View>
       </Modal>
     </KeyboardAvoidingView>
   );

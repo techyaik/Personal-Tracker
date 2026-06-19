@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     backgroundColor: COLORS.white,
     borderColor: COLORS.borderLight,
-    borderRadius: RADIUS.md,
+    borderRadius: RADIUS.lg,
     borderWidth: 1,
     flexDirection: 'row',
     gap: 8,
@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
   row: {
     backgroundColor: COLORS.white,
     borderColor: COLORS.borderLight,
-    borderRadius: RADIUS.md,
+    borderRadius: RADIUS.lg,
     borderWidth: 1,
     flexDirection: 'row',
     gap: 10,

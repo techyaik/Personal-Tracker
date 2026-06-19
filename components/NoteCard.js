@@ -47,7 +47,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: COLORS.white,
     borderColor: COLORS.borderLight,
-    borderRadius: RADIUS.md,
+    borderRadius: RADIUS.lg,
     borderWidth: 1,
     gap: 8,
     padding: 12,
@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
   delete: {
     alignItems: 'center',
     backgroundColor: COLORS.danger,
-    borderRadius: RADIUS.md,
+    borderRadius: RADIUS.lg,
     justifyContent: 'center',
     marginLeft: 8,
     width: 70,

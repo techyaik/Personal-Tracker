@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation, DrawerActions } from '@react-navigation/native';
 import { COLORS } from '../constants/colors';
 import { TYPOGRAPHY } from '../constants/typography';
 import { RADIUS, SHADOWS } from '../constants/theme';
@@ -12,20 +13,56 @@ const tintForAccent = (accent) => {
   return COLORS.accentLight.health;
 };
 
-export function AppHeader({ title, onBack, rightIcon, onRight, rightText, accent = COLORS.health }) {
+export function AppHeader({
+  title,
+  onBack,
+  rightIcon,
+  onRight,
+  rightText,
+  accent = COLORS.health,
+  showMenu,
+  showSettings,
+}) {
+  const navigation = useNavigation();
+  const canShowMenu = showMenu ?? !onBack;
+  const canShowSettings = showSettings ?? !onBack;
+  const openDrawer = () => {
+    try {
+      navigation.dispatch(DrawerActions.openDrawer());
+    } catch (e) {
+      navigation.getParent('RootDrawer')?.openDrawer?.();
+    }
+  };
+  const openSettings = () => {
+    try {
+      navigation.getParent('RootDrawer')?.navigate('Settings');
+    } catch (e) {
+      navigation.navigate('Settings');
+    }
+  };
+
   return (
     <View style={styles.header}>
-      <View style={[styles.side, !onBack ? styles.noBackSide : null]}>
+      <View style={styles.side}>
         {onBack ? (
           <Pressable onPress={onBack} style={styles.iconButton} hitSlop={10}>
             <Ionicons name="chevron-back" size={22} color={COLORS.textPrimary} />
           </Pressable>
+        ) : canShowMenu ? (
+          <Pressable onPress={openDrawer} style={[styles.iconButton, styles.neutralButton]} hitSlop={10}>
+            <Ionicons name="menu" size={22} color={COLORS.textPrimary} />
+          </Pressable>
         ) : null}
       </View>
-      <Text selectable style={[TYPOGRAPHY.title, styles.title, !onBack ? styles.leftTitle : null]} numberOfLines={1}>
+      <Text selectable style={[TYPOGRAPHY.title, styles.title]} numberOfLines={1}>
         {title}
       </Text>
       <View style={[styles.side, styles.right]}>
+        {canShowSettings ? (
+          <Pressable onPress={openSettings} style={[styles.iconButton, styles.neutralButton]} hitSlop={10}>
+            <Ionicons name="settings-outline" size={19} color={COLORS.textPrimary} />
+          </Pressable>
+        ) : null}
         {rightIcon ? (
           <Pressable
             onPress={onRight}
@@ -47,11 +84,9 @@ export function AppHeader({ title, onBack, rightIcon, onRight, rightText, accent
 
 const styles = StyleSheet.create({
   header: { alignItems: 'center', flexDirection: 'row', minHeight: 40 },
-  side: { width: 64, flexDirection: 'row' },
-  noBackSide: { width: 0 },
-  right: { justifyContent: 'flex-end' },
+  side: { width: 88, flexDirection: 'row' },
+  right: { gap: 8, justifyContent: 'flex-end' },
   title: { flex: 1, textAlign: 'center' },
-  leftTitle: { textAlign: 'left' },
   iconButton: {
     width: 36,
     height: 36,
@@ -59,6 +94,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: RADIUS.pill,
     borderWidth: 1,
+  },
+  neutralButton: {
+    backgroundColor: COLORS.white,
+    borderColor: COLORS.borderLight,
+    ...SHADOWS.subtle,
   },
   rightText: { fontSize: 14, fontWeight: '600' },
 });

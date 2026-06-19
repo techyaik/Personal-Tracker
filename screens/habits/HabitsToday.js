@@ -58,22 +58,28 @@ export default function HabitsToday({ navigation }) {
         <View style={styles.section}>
           <SectionHeader>Weekly completion</SectionHeader>
           <View style={styles.weekBars}>
-            {week.map((day) => (
-              <View key={day.date} style={styles.barItem}>
-                <View style={styles.barTrack}>
-                  <View
-                    style={[
-                      styles.barFill,
-                      {
-                        height: `${day.percent}%`,
-                        backgroundColor: day.date === todayKey() ? COLORS.habits : COLORS.tealLight,
-                      },
-                    ]}
-                  />
+            {week.map((day) => {
+              const isToday = day.date === todayKey();
+              return (
+                <View key={day.date} style={styles.barItem}>
+                  <View style={styles.barTrack}>
+                    <View
+                      style={[
+                        styles.barFill,
+                        {
+                          height: `${day.percent || 0}%`,
+                          backgroundColor: isToday ? COLORS.habits : COLORS.accentLight.habits,
+                          opacity: day.percent === 0 ? 0 : 1,
+                        },
+                      ]}
+                    />
+                  </View>
+                  <Text style={[styles.dayLabel, isToday ? styles.todayLabel : null]}>
+                    {displayDate(day.date, 'EEE')}
+                  </Text>
                 </View>
-                <Text style={styles.dayLabel}>{displayDate(day.date, 'EEE')}</Text>
-              </View>
-            ))}
+              );
+            })}
           </View>
         </View>
       ) : null}
@@ -82,7 +88,7 @@ export default function HabitsToday({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  section: { gap: 8 },
+  section: { gap: 12, marginBottom: 8 },
   weekBars: {
     alignItems: 'flex-end',
     backgroundColor: COLORS.white,
@@ -90,14 +96,16 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.lg,
     borderWidth: 1,
     flexDirection: 'row',
-    gap: 10,
+    gap: 8,
     justifyContent: 'space-between',
-    minHeight: 128,
-    padding: 12,
+    minHeight: 136,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     ...SHADOWS.subtle,
   },
-  barItem: { alignItems: 'center', flex: 1, gap: 6 },
-  barTrack: { backgroundColor: COLORS.surface, borderRadius: RADIUS.pill, height: 76, justifyContent: 'flex-end', overflow: 'hidden', width: 16 },
-  barFill: { borderRadius: RADIUS.pill, width: 16 },
-  dayLabel: { color: COLORS.textHint, fontSize: 10 },
+  barItem: { alignItems: 'center', flex: 1, gap: 8 },
+  barTrack: { backgroundColor: COLORS.surface, borderRadius: RADIUS.pill, height: 80, justifyContent: 'flex-end', overflow: 'hidden', width: 14 },
+  barFill: { borderRadius: RADIUS.pill, width: 14 },
+  dayLabel: { color: COLORS.textSecondary, fontSize: 10, fontWeight: '500' },
+  todayLabel: { color: COLORS.habits, fontWeight: '800' },
 });

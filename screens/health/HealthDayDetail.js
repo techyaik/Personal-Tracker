@@ -1,6 +1,7 @@
 import React from 'react';
 import { Alert, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { BarChart } from 'react-native-chart-kit';
+import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../constants/colors';
 import { TYPOGRAPHY } from '../../constants/typography';
 import { AppHeader } from '../../components/AppHeader';
@@ -48,12 +49,32 @@ export default function HealthDayDetail({ navigation, route }) {
         onRight={() => navigation.navigate('HealthLogEntry', { entryId: entry.id, entry })}
       />
       <View style={styles.grid}>
-        <MetricCard value={entry.weight ?? '—'} label="Weight kg" accent={COLORS.health} />
-        <MetricCard value={entry.sleep ?? '—'} label="Sleep hrs" accent={COLORS.health} />
+        <MetricCard
+          value={entry.weight ?? '—'}
+          label="Weight kg"
+          accent={COLORS.health}
+          icon={<Ionicons name="scale-outline" size={16} color={COLORS.health} />}
+        />
+        <MetricCard
+          value={entry.sleep ?? '—'}
+          label="Sleep hrs"
+          accent={COLORS.health}
+          icon={<Ionicons name="bed-outline" size={16} color={COLORS.health} />}
+        />
       </View>
       <View style={styles.grid}>
-        <MetricCard value={entry.steps?.toLocaleString?.() ?? '—'} label="Steps" accent={COLORS.health} />
-        <MetricCard value={entry.water ?? '—'} label="Water glasses" accent={COLORS.health} />
+        <MetricCard
+          value={entry.steps?.toLocaleString?.() ?? '—'}
+          label="Steps"
+          accent={COLORS.health}
+          icon={<Ionicons name="walk-outline" size={16} color={COLORS.health} />}
+        />
+        <MetricCard
+          value={entry.water ?? '—'}
+          label="Water glasses"
+          accent={COLORS.health}
+          icon={<Ionicons name="water-outline" size={16} color={COLORS.health} />}
+        />
       </View>
       <View style={styles.section}>
         <SectionHeader>Weekly weight</SectionHeader>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { COLORS } from '../../constants/colors';
 import { MOODS } from '../../constants/categories';
 import { AppHeader } from '../../components/AppHeader';
@@ -60,7 +60,9 @@ export default function JournalNewEntry({ navigation, route }) {
 
 function Tool({ label, onPress }) {
   return (
-    <Text onPress={onPress} style={styles.tool}>{label}</Text>
+    <Pressable onPress={onPress} style={({ pressed }) => [styles.tool, pressed ? styles.toolPressed : null]}>
+      <Text style={styles.toolText}>{label}</Text>
+    </Pressable>
   );
 }
 
@@ -81,13 +83,19 @@ const styles = StyleSheet.create({
     ...SHADOWS.soft,
   },
   tool: {
-    color: COLORS.textSecondary,
-    fontSize: 18,
-    fontWeight: '700',
-    height: 36,
-    lineHeight: 36,
+    alignItems: 'center',
     borderRadius: RADIUS.pill,
+    height: 38,
+    justifyContent: 'center',
+    width: 38,
+  },
+  toolPressed: {
+    backgroundColor: COLORS.borderLight,
+  },
+  toolText: {
+    color: COLORS.textSecondary,
+    fontSize: 16,
+    fontWeight: '700',
     textAlign: 'center',
-    width: 36,
   },
 });

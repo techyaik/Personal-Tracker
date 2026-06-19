@@ -29,7 +29,7 @@ export function HabitRow({ habit, done, streak, category, onToggle, onPress, onL
     <Pressable onPress={onPress} onLongPress={onLongPress} style={styles.row}>
       <Pressable
         onPress={onToggle}
-        style={[styles.check, done ? { backgroundColor: COLORS.tealDark, borderColor: COLORS.tealDark } : null]}
+        style={[styles.check, done ? { backgroundColor: COLORS.habits, borderColor: COLORS.habits } : null]}
       >
         {done ? <Ionicons name="checkmark" size={17} color={COLORS.white} /> : null}
       </Pressable>
@@ -49,7 +49,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: COLORS.white,
     borderColor: COLORS.borderLight,
-    borderRadius: RADIUS.md,
+    borderRadius: RADIUS.lg,
     borderWidth: 1,
     flexDirection: 'row',
     gap: 10,
@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
   rowTitle: { color: COLORS.textPrimary, fontSize: 14, fontWeight: '600' },
   check: {
     alignItems: 'center',
-    borderColor: COLORS.tealDark,
+    borderColor: COLORS.habits,
     borderRadius: 13,
     borderWidth: 1.5,
     height: 26,

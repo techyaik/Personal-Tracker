@@ -71,10 +71,19 @@ export default function HabitDetail({ navigation, route }) {
         </View>
       </View>
       <View style={styles.legend}>
-        <Text style={styles.legendText}>● Done</Text>
-        <Text style={styles.legendText}>○ Missed</Text>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendDot, { backgroundColor: COLORS.habits }]} />
+          <Text style={styles.legendText}>Done</Text>
+        </View>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendDot, { backgroundColor: COLORS.pillMindful.bg }]} />
+          <Text style={styles.legendText}>Missed</Text>
+        </View>
       </View>
-      <Text selectable style={styles.info}>Best streak: {getBestStreak(habit)} days · Started {displayDate(habit.createdAt)}</Text>
+      <View style={styles.infoCard}>
+        <Ionicons name="information-circle-outline" size={16} color={COLORS.textSecondary} />
+        <Text selectable style={styles.info}>Started on {displayDate(habit.createdAt)} · Goal is {habit.goal}</Text>
+      </View>
     </Screen>
   );
 }
@@ -86,12 +95,12 @@ const styles = StyleSheet.create({
     borderColor: COLORS.borderLight,
     borderRadius: RADIUS.lg,
     borderWidth: 1,
-    gap: 10,
-    padding: 14,
+    gap: 12,
+    padding: 16,
     ...SHADOWS.subtle,
   },
-  weekHeader: { flexDirection: 'row' },
-  weekText: { color: COLORS.textHint, flex: 1, fontSize: 10, textAlign: 'center' },
+  weekHeader: { flexDirection: 'row', marginBottom: 6 },
+  weekText: { color: COLORS.textHint, flex: 1, fontSize: 11, fontWeight: '600', textAlign: 'center' },
   calendar: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 8 },
   dayCell: { alignItems: 'center', width: `${100 / 7}%` },
   dayDot: { alignItems: 'center', borderRadius: 16, height: 32, justifyContent: 'center', width: 32 },
@@ -101,7 +110,21 @@ const styles = StyleSheet.create({
   outside: { opacity: 0.28 },
   dayText: { color: COLORS.textSecondary, fontSize: 11 },
   doneText: { color: COLORS.white, fontWeight: '700' },
-  legend: { flexDirection: 'row', gap: 16 },
-  legendText: { color: COLORS.textSecondary, fontSize: 12 },
-  info: { color: COLORS.textSecondary, fontSize: 12 },
+  legend: { flexDirection: 'row', gap: 20, paddingHorizontal: 4 },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  legendDot: { width: 10, height: 10, borderRadius: 5 },
+  legendText: { color: COLORS.textSecondary, fontSize: 12, fontWeight: '500' },
+  infoCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.white,
+    borderColor: COLORS.borderLight,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    padding: 12,
+    gap: 8,
+    marginTop: 4,
+    ...SHADOWS.subtle,
+  },
+  info: { color: COLORS.textSecondary, fontSize: 12, fontWeight: '500', flex: 1 },
 });

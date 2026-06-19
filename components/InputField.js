@@ -15,7 +15,7 @@ export function InputField(props) {
 
 const styles = StyleSheet.create({
   input: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: COLORS.white,
     borderColor: COLORS.borderLight,
     borderRadius: RADIUS.md,
     borderWidth: 1,

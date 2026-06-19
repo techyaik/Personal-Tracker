@@ -9,7 +9,7 @@ export function Screen({ children, scroll = true, loading = false, style, conten
   if (loading) {
     return (
       <SafeAreaView style={[styles.root, styles.center, style]}>
-        <LinearGradient colors={GRADIENTS.page} style={StyleSheet.absoluteFill} />
+        <LinearGradient colors={GRADIENTS.page} style={StyleSheet.absoluteFill} pointerEvents="none" />
         <View style={styles.loader}>
           <ActivityIndicator color={COLORS.health} />
         </View>
@@ -20,7 +20,7 @@ export function Screen({ children, scroll = true, loading = false, style, conten
   if (!scroll) {
     return (
       <SafeAreaView style={[styles.root, style]}>
-        <LinearGradient colors={GRADIENTS.page} style={StyleSheet.absoluteFill} />
+        <LinearGradient colors={GRADIENTS.page} style={StyleSheet.absoluteFill} pointerEvents="none" />
         {children}
       </SafeAreaView>
     );
@@ -28,7 +28,7 @@ export function Screen({ children, scroll = true, loading = false, style, conten
 
   return (
     <SafeAreaView style={[styles.root, style]}>
-      <LinearGradient colors={GRADIENTS.page} style={StyleSheet.absoluteFill} />
+      <LinearGradient colors={GRADIENTS.page} style={StyleSheet.absoluteFill} pointerEvents="none" />
       <ScrollView
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"

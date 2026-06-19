@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, StyleSheet, TouchableWithoutFeedback, Keyboard, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
 import { COLORS } from '../../constants/colors';
 import { AppHeader } from '../../components/AppHeader';
 import { InputField } from '../../components/InputField';
@@ -76,23 +76,21 @@ export default function HealthLogEntry({ navigation, route }) {
 
   return (
     <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View style={styles.flex}>
-          <Screen>
-            <AppHeader title="Log health" onBack={() => navigation.goBack()} />
-            <View style={styles.form}>
-              <InputField value={form.date} onChangeText={(v) => setValue('date', v)} placeholder="YYYY-MM-DD" />
-              <InputField value={form.weight} onChangeText={(v) => setValue('weight', v)} placeholder="Weight (kg)" keyboardType="decimal-pad" />
-              <InputField value={form.sleep} onChangeText={(v) => setValue('sleep', v)} placeholder="Sleep (hours)" keyboardType="decimal-pad" />
-              <InputField value={form.steps} onChangeText={(v) => setValue('steps', v)} placeholder="Steps" keyboardType="number-pad" />
-              <InputField value={form.water} onChangeText={(v) => setValue('water', v)} placeholder="Water (glasses)" keyboardType="number-pad" />
-              <InputField value={form.notes} onChangeText={(v) => setValue('notes', v)} placeholder="Notes" multiline />
-            </View>
-            <PrimaryButton title="Save log" color={COLORS.health} onPress={save} />
-            {editing ? <PrimaryButton title="Delete log" color={COLORS.danger} onPress={confirmDelete} /> : null}
-          </Screen>
-        </View>
-      </TouchableWithoutFeedback>
+      <View style={styles.flex}>
+        <Screen>
+          <AppHeader title="Log health" onBack={() => navigation.goBack()} />
+          <View style={styles.form}>
+            <InputField value={form.date} onChangeText={(v) => setValue('date', v)} placeholder="YYYY-MM-DD" />
+            <InputField value={form.weight} onChangeText={(v) => setValue('weight', v)} placeholder="Weight (kg)" keyboardType="decimal-pad" />
+            <InputField value={form.sleep} onChangeText={(v) => setValue('sleep', v)} placeholder="Sleep (hours)" keyboardType="decimal-pad" />
+            <InputField value={form.steps} onChangeText={(v) => setValue('steps', v)} placeholder="Steps" keyboardType="number-pad" />
+            <InputField value={form.water} onChangeText={(v) => setValue('water', v)} placeholder="Water (glasses)" keyboardType="number-pad" />
+            <InputField value={form.notes} onChangeText={(v) => setValue('notes', v)} placeholder="Notes" multiline />
+          </View>
+          <PrimaryButton title="Save log" color={COLORS.health} onPress={save} />
+          {editing ? <PrimaryButton title="Delete log" color={COLORS.danger} onPress={confirmDelete} /> : null}
+        </Screen>
+      </View>
     </KeyboardAvoidingView>
   );
 }

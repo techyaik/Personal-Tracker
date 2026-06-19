@@ -69,9 +69,24 @@ export default function MoodCalendar({ navigation }) {
       <View style={styles.section}>
         <SectionHeader>Monthly stats</SectionHeader>
         <View style={styles.stats}>
-          <MetricCard value={stats.common} label="Common mood" accent={COLORS.journal} />
-          <MetricCard value={stats.positive} label="Happy + excited" accent={COLORS.journal} />
-          <MetricCard value={stats.heavy} label="Sad + stressed" accent={COLORS.journal} />
+          <MetricCard
+            value={stats.common}
+            label="Common mood"
+            accent={COLORS.journal}
+            icon={<Ionicons name="happy-outline" size={16} color={COLORS.journal} />}
+          />
+          <MetricCard
+            value={stats.positive}
+            label="Happy + excited"
+            accent={COLORS.journal}
+            icon={<Ionicons name="sunny-outline" size={16} color={COLORS.journal} />}
+          />
+          <MetricCard
+            value={stats.heavy}
+            label="Sad + stressed"
+            accent={COLORS.journal}
+            icon={<Ionicons name="cloud-outline" size={16} color={COLORS.journal} />}
+          />
         </View>
       </View>
     </Screen>
