@@ -2,6 +2,7 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { COLORS } from '../constants/colors';
 import { MOODS } from '../constants/categories';
+import { RADIUS, SHADOWS } from '../constants/theme';
 
 export function MoodPicker({ value, onChange }) {
   return (
@@ -14,7 +15,7 @@ export function MoodPicker({ value, onChange }) {
             onPress={() => onChange(mood.key)}
             style={[
               styles.circle,
-              selected ? { borderColor: mood.color, backgroundColor: COLORS.surface } : null,
+              selected ? [SHADOWS.subtle, { borderColor: mood.color, backgroundColor: COLORS.white }] : null,
             ]}
           >
             <Text style={styles.emoji}>{mood.emoji}</Text>
@@ -30,8 +31,8 @@ const styles = StyleSheet.create({
   circle: {
     alignItems: 'center',
     backgroundColor: COLORS.white,
-    borderColor: COLORS.border,
-    borderRadius: 24,
+    borderColor: COLORS.borderLight,
+    borderRadius: RADIUS.pill,
     borderWidth: 1.5,
     height: 48,
     justifyContent: 'center',

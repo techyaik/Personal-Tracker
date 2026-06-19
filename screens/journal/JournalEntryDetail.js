@@ -7,6 +7,7 @@ import { PrimaryButton } from '../../components/PrimaryButton';
 import { Screen } from '../../components/Screen';
 import { useJournal } from '../../hooks/useJournal';
 import { displayDate } from '../../utils/dates';
+import { RADIUS, SHADOWS } from '../../constants/theme';
 
 export default function JournalEntryDetail({ navigation, route }) {
   const { entries, deleteEntry } = useJournal();
@@ -45,7 +46,7 @@ export default function JournalEntryDetail({ navigation, route }) {
 }
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: COLORS.white, borderColor: COLORS.border, borderRadius: 8, borderWidth: 1, gap: 12, padding: 14 },
+  card: { backgroundColor: COLORS.white, borderColor: COLORS.borderLight, borderRadius: RADIUS.lg, borderWidth: 1, gap: 12, padding: 16, ...SHADOWS.subtle },
   emoji: { fontSize: 42, textAlign: 'center' },
   mood: { fontSize: 13, fontWeight: '700', textAlign: 'center' },
   title: { color: COLORS.textPrimary, fontSize: 18, fontWeight: '700' },

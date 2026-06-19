@@ -9,6 +9,7 @@ import { PrimaryButton } from '../../components/PrimaryButton';
 import { Screen } from '../../components/Screen';
 import { SectionHeader } from '../../components/SectionHeader';
 import { useHabits } from '../../hooks/useHabits';
+import { RADIUS, SHADOWS } from '../../constants/theme';
 
 export default function HabitEdit({ navigation, route }) {
   const { habits, updateHabit, deleteHabit } = useHabits();
@@ -68,7 +69,7 @@ export default function HabitEdit({ navigation, route }) {
 const styles = StyleSheet.create({
   form: { gap: 10 },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  segment: { backgroundColor: COLORS.surface, borderColor: COLORS.border, borderRadius: 10, borderWidth: 1, flexDirection: 'row', padding: 4 },
+  segment: { backgroundColor: COLORS.surface, borderColor: COLORS.borderLight, borderRadius: RADIUS.md, borderWidth: 1, flexDirection: 'row', padding: 4 },
   segmentText: { color: COLORS.textSecondary, flex: 1, fontSize: 12, fontWeight: '600', padding: 10, textAlign: 'center', textTransform: 'capitalize' },
-  segmentSelected: { backgroundColor: COLORS.white, borderRadius: 8, color: COLORS.habits },
+  segmentSelected: { backgroundColor: COLORS.white, borderRadius: RADIUS.sm, color: COLORS.habits, ...SHADOWS.subtle },
 });

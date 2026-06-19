@@ -9,6 +9,7 @@ import { NoteCard } from '../../components/NoteCard';
 import { Pill } from '../../components/Pill';
 import { Screen } from '../../components/Screen';
 import { useNotes } from '../../hooks/useNotes';
+import { RADIUS, SHADOWS } from '../../constants/theme';
 
 export default function NotesList({ navigation, route }) {
   const { notes, loading, deleteNote, getAllTags } = useNotes();
@@ -82,12 +83,13 @@ const styles = StyleSheet.create({
   tagButton: {
     alignItems: 'center',
     backgroundColor: COLORS.white,
-    borderColor: COLORS.border,
-    borderRadius: 10,
+    borderColor: COLORS.borderLight,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
     height: 46,
     justifyContent: 'center',
     width: 46,
+    ...SHADOWS.subtle,
   },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   list: { gap: 16, padding: 16 },

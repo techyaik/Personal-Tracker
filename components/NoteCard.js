@@ -3,6 +3,7 @@ import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Swipeable } from 'react-native-gesture-handler';
 import { COLORS } from '../constants/colors';
+import { RADIUS, SHADOWS } from '../constants/theme';
 import { displayDate } from '../utils/dates';
 import { Pill } from './Pill';
 
@@ -45,11 +46,12 @@ export function NoteCard({ note, onPress, onDelete }) {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: COLORS.white,
-    borderColor: COLORS.border,
-    borderRadius: 8,
+    borderColor: COLORS.borderLight,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
     gap: 8,
     padding: 12,
+    ...SHADOWS.subtle,
   },
   titleRow: { alignItems: 'center', flexDirection: 'row', gap: 6 },
   title: { color: COLORS.textPrimary, flex: 1, fontSize: 15, fontWeight: '600' },
@@ -59,7 +61,7 @@ const styles = StyleSheet.create({
   delete: {
     alignItems: 'center',
     backgroundColor: COLORS.danger,
-    borderRadius: 8,
+    borderRadius: RADIUS.md,
     justifyContent: 'center',
     marginLeft: 8,
     width: 70,

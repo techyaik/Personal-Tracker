@@ -1,6 +1,7 @@
 node_modules/
 .expo/
 .expo-check/
+.expo-check*/
 .expo-server.log
 .npm-cache/
 npm-debug.log*

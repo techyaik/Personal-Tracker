@@ -9,7 +9,10 @@ export const COLORS = {
   tealMid: '#1D9E75',
 
   bg: '#F5F5F0',
+  bgWarm: '#FBFAF5',
   surface: '#F7F7F4',
+  surfaceElevated: '#FFFFFF',
+  surfaceTint: '#F3F2EC',
   white: '#FFFFFF',
   border: '#E8E8E8',
   borderLight: '#F0F0F0',
@@ -20,6 +23,13 @@ export const COLORS = {
   danger: '#C2410C',
   dangerBg: '#FFF1EC',
   overlay: 'rgba(26,26,26,0.35)',
+
+  accentLight: {
+    health: '#E6F1FB',
+    habits: '#EEEDFE',
+    notes: '#FAEEDA',
+    journal: '#FAECE7',
+  },
 
   pillHealth: { bg: '#E1F5EE', text: '#0F6E56' },
   pillLearning: { bg: '#E6F1FB', text: '#185FA5' },

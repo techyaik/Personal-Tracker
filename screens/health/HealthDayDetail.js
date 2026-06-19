@@ -1,5 +1,5 @@
 import React from 'react';
-import { Alert, Dimensions, StyleSheet, Text, View } from 'react-native';
+import { Alert, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { BarChart } from 'react-native-chart-kit';
 import { COLORS } from '../../constants/colors';
 import { TYPOGRAPHY } from '../../constants/typography';
@@ -10,9 +10,11 @@ import { Screen } from '../../components/Screen';
 import { SectionHeader } from '../../components/SectionHeader';
 import { useHealth } from '../../hooks/useHealth';
 import { displayDate, lastSevenDaysEnding } from '../../utils/dates';
+import { RADIUS, SHADOWS } from '../../constants/theme';
 
 export default function HealthDayDetail({ navigation, route }) {
   const { logs, loading, deleteLog } = useHealth();
+  const { width } = useWindowDimensions();
   const entry = logs.find((log) => log.id === route.params?.entryId) || route.params?.entry;
 
   if (!entry) {
@@ -57,7 +59,7 @@ export default function HealthDayDetail({ navigation, route }) {
         <SectionHeader>Weekly weight</SectionHeader>
         <BarChart
           data={{ labels: days.map((day) => displayDate(day, 'd')), datasets: [{ data: weights }] }}
-          width={Dimensions.get('window').width - 32}
+          width={Math.min(width - 36, 520)}
           height={210}
           fromZero
           showValuesOnTopOfBars
@@ -86,15 +88,16 @@ export default function HealthDayDetail({ navigation, route }) {
 const styles = StyleSheet.create({
   grid: { flexDirection: 'row', gap: 8 },
   section: { gap: 8 },
-  chart: { borderRadius: 8 },
+  chart: { borderRadius: RADIUS.lg, ...SHADOWS.subtle },
   notes: {
     backgroundColor: COLORS.white,
-    borderColor: COLORS.border,
-    borderRadius: 8,
+    borderColor: COLORS.borderLight,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
     color: COLORS.textPrimary,
     fontSize: 14,
     lineHeight: 20,
-    padding: 12,
+    padding: 14,
+    ...SHADOWS.subtle,
   },
 });

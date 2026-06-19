@@ -8,6 +8,7 @@ import { Pill } from '../../components/Pill';
 import { Screen } from '../../components/Screen';
 import { useNotes } from '../../hooks/useNotes';
 import { showToast } from '../../utils/feedback';
+import { RADIUS, SHADOWS } from '../../constants/theme';
 
 const wrap = (text, prefix, suffix = prefix) => (text ? `${prefix}${text}${suffix}` : '');
 
@@ -134,19 +135,20 @@ const styles = StyleSheet.create({
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   toolbar: {
     backgroundColor: COLORS.white,
-    borderTopColor: COLORS.border,
+    borderTopColor: COLORS.borderLight,
     borderTopWidth: 1,
     flexDirection: 'row',
     justifyContent: 'space-around',
     paddingBottom: 18,
     paddingTop: 8,
+    ...SHADOWS.soft,
   },
-  tool: { alignItems: 'center', borderRadius: 18, height: 36, justifyContent: 'center', width: 36 },
+  tool: { alignItems: 'center', borderRadius: RADIUS.pill, height: 38, justifyContent: 'center', width: 38 },
   toolLabel: { fontSize: 15, fontWeight: '700' },
-  toolActive: { backgroundColor: COLORS.surface },
+  toolActive: { backgroundColor: COLORS.surface, ...SHADOWS.subtle },
   modalBackdrop: { alignItems: 'center', backgroundColor: COLORS.overlay, flex: 1, justifyContent: 'center', padding: 24 },
-  modalCard: { backgroundColor: COLORS.white, borderRadius: 12, gap: 12, padding: 16, width: '100%' },
-  modalTitle: { color: COLORS.textPrimary, fontSize: 16, fontWeight: '600' },
-  modalButton: { alignItems: 'center', backgroundColor: COLORS.notes, borderRadius: 10, padding: 12 },
+  modalCard: { backgroundColor: COLORS.white, borderRadius: RADIUS.lg, gap: 12, padding: 18, width: '100%', ...SHADOWS.soft },
+  modalTitle: { color: COLORS.textPrimary, fontSize: 17, fontWeight: '700' },
+  modalButton: { alignItems: 'center', backgroundColor: COLORS.notes, borderRadius: RADIUS.md, padding: 13, ...SHADOWS.subtle },
   modalButtonText: { color: COLORS.white, fontWeight: '600' },
 });

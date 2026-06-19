@@ -6,6 +6,7 @@ import { Pill } from '../../components/Pill';
 import { Screen } from '../../components/Screen';
 import { useNotes } from '../../hooks/useNotes';
 import { displayDate } from '../../utils/dates';
+import { RADIUS, SHADOWS } from '../../constants/theme';
 
 export default function NoteDetail({ navigation, route }) {
   const { notes } = useNotes();
@@ -29,7 +30,7 @@ export default function NoteDetail({ navigation, route }) {
 }
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: COLORS.white, borderColor: COLORS.border, borderRadius: 8, borderWidth: 1, gap: 12, padding: 14 },
+  card: { backgroundColor: COLORS.white, borderColor: COLORS.borderLight, borderRadius: RADIUS.lg, borderWidth: 1, gap: 12, padding: 16, ...SHADOWS.subtle },
   title: { color: COLORS.textPrimary, fontSize: 22, fontWeight: '700' },
   date: { color: COLORS.textHint, fontSize: 11 },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },

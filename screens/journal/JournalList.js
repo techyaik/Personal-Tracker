@@ -10,6 +10,7 @@ import { Screen } from '../../components/Screen';
 import { SectionHeader } from '../../components/SectionHeader';
 import { useJournal } from '../../hooks/useJournal';
 import { displayDate } from '../../utils/dates';
+import { RADIUS, SHADOWS } from '../../constants/theme';
 
 export default function JournalList({ navigation }) {
   const { entries, loading } = useJournal();
@@ -80,25 +81,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     alignSelf: 'flex-start',
     backgroundColor: COLORS.white,
-    borderColor: COLORS.border,
-    borderRadius: 10,
+    borderColor: COLORS.borderLight,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
     flexDirection: 'row',
     gap: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
+    ...SHADOWS.subtle,
   },
   calendarText: { color: COLORS.journal, fontSize: 13, fontWeight: '600' },
   list: { gap: 16, padding: 16 },
   group: { gap: 8 },
   row: {
     backgroundColor: COLORS.white,
-    borderColor: COLORS.border,
-    borderRadius: 8,
+    borderColor: COLORS.borderLight,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
     flexDirection: 'row',
     gap: 10,
     padding: 12,
+    ...SHADOWS.subtle,
   },
   emoji: { fontSize: 26 },
   textWrap: { flex: 1, gap: 6 },

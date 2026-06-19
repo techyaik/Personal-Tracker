@@ -9,6 +9,7 @@ import { Screen } from '../../components/Screen';
 import { SectionHeader } from '../../components/SectionHeader';
 import { useHabits } from '../../hooks/useHabits';
 import { displayDate, todayKey } from '../../utils/dates';
+import { RADIUS, SHADOWS } from '../../constants/theme';
 
 export default function HabitsToday({ navigation }) {
   const { habits, loading, isDone, toggleCompletion, getStreak, getWeekPercents, deleteHabit } = useHabits();
@@ -85,17 +86,18 @@ const styles = StyleSheet.create({
   weekBars: {
     alignItems: 'flex-end',
     backgroundColor: COLORS.white,
-    borderColor: COLORS.border,
-    borderRadius: 8,
+    borderColor: COLORS.borderLight,
+    borderRadius: RADIUS.lg,
     borderWidth: 1,
     flexDirection: 'row',
     gap: 10,
     justifyContent: 'space-between',
     minHeight: 128,
     padding: 12,
+    ...SHADOWS.subtle,
   },
   barItem: { alignItems: 'center', flex: 1, gap: 6 },
-  barTrack: { backgroundColor: COLORS.surface, borderRadius: 8, height: 76, justifyContent: 'flex-end', overflow: 'hidden', width: 16 },
-  barFill: { borderRadius: 8, width: 16 },
+  barTrack: { backgroundColor: COLORS.surface, borderRadius: RADIUS.pill, height: 76, justifyContent: 'flex-end', overflow: 'hidden', width: 16 },
+  barFill: { borderRadius: RADIUS.pill, width: 16 },
   dayLabel: { color: COLORS.textHint, fontSize: 10 },
 });

@@ -10,6 +10,7 @@ import { Screen } from '../../components/Screen';
 import { useJournal } from '../../hooks/useJournal';
 import { displayDate, todayKey } from '../../utils/dates';
 import { showToast } from '../../utils/feedback';
+import { RADIUS, SHADOWS } from '../../constants/theme';
 
 export default function JournalNewEntry({ navigation, route }) {
   const { entries, addEntry, updateEntry } = useJournal();
@@ -70,13 +71,14 @@ const styles = StyleSheet.create({
   bodyInput: { minHeight: 320 },
   toolbar: {
     backgroundColor: COLORS.white,
-    borderTopColor: COLORS.border,
+    borderTopColor: COLORS.borderLight,
     borderTopWidth: 1,
     flexDirection: 'row',
     gap: 16,
     paddingBottom: 18,
     paddingHorizontal: 18,
     paddingTop: 8,
+    ...SHADOWS.soft,
   },
   tool: {
     color: COLORS.textSecondary,
@@ -84,6 +86,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     height: 36,
     lineHeight: 36,
+    borderRadius: RADIUS.pill,
     textAlign: 'center',
     width: 36,
   },

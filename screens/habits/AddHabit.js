@@ -9,6 +9,7 @@ import { PrimaryButton } from '../../components/PrimaryButton';
 import { Screen } from '../../components/Screen';
 import { SectionHeader } from '../../components/SectionHeader';
 import { useHabits } from '../../hooks/useHabits';
+import { RADIUS, SHADOWS } from '../../constants/theme';
 
 export default function AddHabit({ navigation }) {
   const { addHabit } = useHabits();
@@ -74,8 +75,8 @@ const styles = StyleSheet.create({
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   segment: {
     backgroundColor: COLORS.surface,
-    borderColor: COLORS.border,
-    borderRadius: 10,
+    borderColor: COLORS.borderLight,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
     flexDirection: 'row',
     padding: 4,
@@ -89,5 +90,5 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     textTransform: 'capitalize',
   },
-  segmentSelected: { backgroundColor: COLORS.white, borderRadius: 8, color: COLORS.habits },
+  segmentSelected: { backgroundColor: COLORS.white, borderRadius: RADIUS.sm, color: COLORS.habits, ...SHADOWS.subtle },
 });

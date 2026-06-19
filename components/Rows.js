@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../constants/colors';
 import { TYPOGRAPHY } from '../constants/typography';
+import { RADIUS, SHADOWS } from '../constants/theme';
 import { Pill } from './Pill';
 
 export function ListRow({ title, subtitle, right, onPress, onLongPress }) {
@@ -47,13 +48,14 @@ const styles = StyleSheet.create({
   row: {
     alignItems: 'center',
     backgroundColor: COLORS.white,
-    borderColor: COLORS.border,
-    borderRadius: 8,
+    borderColor: COLORS.borderLight,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
     flexDirection: 'row',
     gap: 10,
-    minHeight: 64,
+    minHeight: 56,
     padding: 12,
+    ...SHADOWS.subtle,
   },
   rowText: { flex: 1, gap: 5 },
   rowTitle: { color: COLORS.textPrimary, fontSize: 14, fontWeight: '600' },

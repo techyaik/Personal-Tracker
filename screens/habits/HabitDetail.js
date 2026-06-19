@@ -8,6 +8,7 @@ import { Screen } from '../../components/Screen';
 import { SectionHeader } from '../../components/SectionHeader';
 import { useHabits } from '../../hooks/useHabits';
 import { displayDate, isFutureDate, monthGridDays, todayKey } from '../../utils/dates';
+import { RADIUS, SHADOWS } from '../../constants/theme';
 
 export default function HabitDetail({ navigation, route }) {
   const { habits, isDone, getStreak, getBestStreak, getDayCompletionPercent } = useHabits();
@@ -38,7 +39,7 @@ export default function HabitDetail({ navigation, route }) {
         <MetricCard value={`${getDayCompletionPercent(todayKey())}%`} label="Today all habits" accent={COLORS.habits} />
         <MetricCard value={getBestStreak(habit)} label="Best streak" accent={COLORS.habits} />
       </View>
-      <View style={styles.section}>
+      <View style={styles.calendarCard}>
         <SectionHeader>{format(month, 'MMMM yyyy')}</SectionHeader>
         <View style={styles.weekHeader}>
           {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, index) => (
@@ -80,7 +81,15 @@ export default function HabitDetail({ navigation, route }) {
 
 const styles = StyleSheet.create({
   grid: { flexDirection: 'row', gap: 8 },
-  section: { gap: 8 },
+  calendarCard: {
+    backgroundColor: COLORS.white,
+    borderColor: COLORS.borderLight,
+    borderRadius: RADIUS.lg,
+    borderWidth: 1,
+    gap: 10,
+    padding: 14,
+    ...SHADOWS.subtle,
+  },
   weekHeader: { flexDirection: 'row' },
   weekText: { color: COLORS.textHint, flex: 1, fontSize: 10, textAlign: 'center' },
   calendar: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 8 },

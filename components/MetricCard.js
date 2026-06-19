@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { COLORS } from '../constants/colors';
 import { TYPOGRAPHY } from '../constants/typography';
+import { RADIUS, SHADOWS } from '../constants/theme';
 
 export function MetricCard({ value, label, accent }) {
   return (
@@ -20,13 +21,13 @@ const styles = StyleSheet.create({
   card: {
     flex: 1,
     minHeight: 74,
-    backgroundColor: COLORS.white,
-    borderColor: COLORS.border,
-    borderRadius: 8,
-    borderTopWidth: 3,
+    backgroundColor: COLORS.surfaceElevated,
+    borderColor: COLORS.borderLight,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
     gap: 4,
     justifyContent: 'center',
     padding: 12,
+    ...SHADOWS.subtle,
   },
 });

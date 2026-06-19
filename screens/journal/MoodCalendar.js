@@ -10,6 +10,7 @@ import { Screen } from '../../components/Screen';
 import { SectionHeader } from '../../components/SectionHeader';
 import { useJournal } from '../../hooks/useJournal';
 import { isFutureDate, monthGridDays, todayKey } from '../../utils/dates';
+import { RADIUS, SHADOWS } from '../../constants/theme';
 
 export default function MoodCalendar({ navigation }) {
   const { entries, getMoodForDate } = useJournal();
@@ -79,9 +80,9 @@ export default function MoodCalendar({ navigation }) {
 
 const styles = StyleSheet.create({
   monthNav: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
-  arrow: { alignItems: 'center', backgroundColor: COLORS.white, borderColor: COLORS.border, borderRadius: 18, borderWidth: 1, height: 36, justifyContent: 'center', width: 36 },
+  arrow: { alignItems: 'center', backgroundColor: COLORS.white, borderColor: COLORS.borderLight, borderRadius: RADIUS.pill, borderWidth: 1, height: 38, justifyContent: 'center', width: 38, ...SHADOWS.subtle },
   month: { color: COLORS.textPrimary, fontSize: 17, fontWeight: '700' },
-  grid: { backgroundColor: COLORS.white, borderColor: COLORS.border, borderRadius: 8, borderWidth: 1, flexDirection: 'row', flexWrap: 'wrap', padding: 8, rowGap: 8 },
+  grid: { backgroundColor: COLORS.white, borderColor: COLORS.borderLight, borderRadius: RADIUS.lg, borderWidth: 1, flexDirection: 'row', flexWrap: 'wrap', padding: 10, rowGap: 8, ...SHADOWS.subtle },
   weekText: { color: COLORS.textHint, fontSize: 10, textAlign: 'center', width: `${100 / 7}%` },
   dayCell: { alignItems: 'center', width: `${100 / 7}%` },
   day: { alignItems: 'center', borderRadius: 18, height: 44, justifyContent: 'center', width: 40 },

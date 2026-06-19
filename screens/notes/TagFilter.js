@@ -6,6 +6,7 @@ import { AppHeader } from '../../components/AppHeader';
 import { EmptyState } from '../../components/EmptyState';
 import { Screen } from '../../components/Screen';
 import { useNotes } from '../../hooks/useNotes';
+import { RADIUS, SHADOWS } from '../../constants/theme';
 
 export default function TagFilter({ navigation }) {
   const { notes, getAllTags } = useNotes();
@@ -36,12 +37,13 @@ const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   card: {
     backgroundColor: COLORS.white,
-    borderColor: COLORS.border,
-    borderRadius: 8,
+    borderColor: COLORS.borderLight,
+    borderRadius: RADIUS.lg,
     borderWidth: 1,
     gap: 8,
     padding: 12,
     width: '48%',
+    ...SHADOWS.subtle,
   },
   tag: { color: COLORS.textPrimary, fontSize: 15, fontWeight: '600' },
   count: { color: COLORS.textSecondary, fontSize: 11 },

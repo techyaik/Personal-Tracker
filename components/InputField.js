@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, TextInput } from 'react-native';
 import { COLORS } from '../constants/colors';
+import { RADIUS } from '../constants/theme';
 
 export function InputField(props) {
   return (
@@ -15,14 +16,14 @@ export function InputField(props) {
 const styles = StyleSheet.create({
   input: {
     backgroundColor: COLORS.surface,
-    borderColor: COLORS.border,
-    borderRadius: 10,
+    borderColor: COLORS.borderLight,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
     color: COLORS.textPrimary,
     fontSize: 14,
-    minHeight: 46,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    minHeight: 50,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
   },
   multiline: {
     minHeight: 108,
