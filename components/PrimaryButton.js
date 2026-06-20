@@ -1,18 +1,22 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { COLORS } from '../constants/colors';
-import { GRADIENTS, RADIUS, SHADOWS } from '../constants/theme';
+import { useTheme } from '../theme/ThemeContext';
+import { RADIUS, SHADOWS } from '../constants/theme';
 
-const gradientForColor = (color) => {
-  if (color === COLORS.habits) return GRADIENTS.habits;
-  if (color === COLORS.notes) return GRADIENTS.notes;
-  if (color === COLORS.journal) return GRADIENTS.journal;
-  if (color === COLORS.danger) return ['#D95D35', COLORS.danger];
-  return GRADIENTS.health;
-};
+export function PrimaryButton({ title, onPress, color, disabled = false, icon }) {
+  const { colors, gradients, resolveThemeColor } = useTheme();
 
-export function PrimaryButton({ title, onPress, color = COLORS.health, disabled = false, icon }) {
+  const activeColor = color ? resolveThemeColor(color) : colors.health;
+
+  const gradientForColor = () => {
+    if (activeColor === colors.habits) return gradients.habits;
+    if (activeColor === colors.notes) return gradients.notes;
+    if (activeColor === colors.journal) return gradients.journal;
+    if (activeColor === colors.danger) return [colors.theme === 'dark' ? '#5E2B2B' : '#D95D35', colors.danger];
+    return gradients.health;
+  };
+
   return (
     <Pressable
       onPress={onPress}
@@ -24,13 +28,13 @@ export function PrimaryButton({ title, onPress, color = COLORS.health, disabled 
       ]}
     >
       <LinearGradient
-        colors={disabled ? [COLORS.textHint, COLORS.textHint] : gradientForColor(color)}
+        colors={disabled ? [colors.textHint, colors.textHint] : gradientForColor()}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.gradient}
       >
         {icon}
-        <Text style={styles.text}>{title}</Text>
+        <Text style={[styles.text, { color: colors.white }]}>{title}</Text>
       </LinearGradient>
     </Pressable>
   );
@@ -51,5 +55,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   disabled: { opacity: 0.7 },
-  text: { color: COLORS.white, fontSize: 15, fontWeight: '700' },
+  text: { fontSize: 15, fontWeight: '700' },
 });

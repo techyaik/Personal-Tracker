@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { format, isSameMonth, parseISO } from 'date-fns';
-import { COLORS } from '../../constants/colors';
+import { useTheme } from '../../theme/ThemeContext';
 import { AppHeader } from '../../components/AppHeader';
 import { MetricCard } from '../../components/MetricCard';
 import { Screen } from '../../components/Screen';
@@ -9,9 +9,12 @@ import { SectionHeader } from '../../components/SectionHeader';
 import { useHabits } from '../../hooks/useHabits';
 import { displayDate, isFutureDate, monthGridDays, todayKey } from '../../utils/dates';
 import { RADIUS, SHADOWS } from '../../constants/theme';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function HabitDetail({ navigation, route }) {
   const { habits, isDone, getStreak, getBestStreak, getDayCompletionPercent } = useHabits();
+  const { colors } = useTheme();
+
   const habit = habits.find((item) => item.id === route.params?.habit?.id) || route.params?.habit;
   const month = new Date();
   const days = monthGridDays(month);
@@ -20,7 +23,7 @@ export default function HabitDetail({ navigation, route }) {
     return (
       <Screen>
         <AppHeader title="Habit" onBack={() => navigation.goBack()} />
-        <Text>Habit not found.</Text>
+        <Text style={{ color: colors.textPrimary, padding: 16 }}>Habit not found.</Text>
       </Screen>
     );
   }
@@ -31,19 +34,19 @@ export default function HabitDetail({ navigation, route }) {
         title={habit.name}
         onBack={() => navigation.goBack()}
         rightIcon="pencil"
-        accent={COLORS.habits}
+        accent={colors.habits}
         onRight={() => navigation.navigate('HabitEdit', { habit })}
       />
       <View style={styles.grid}>
-        <MetricCard value={getStreak(habit)} label="Current streak" accent={COLORS.habits} />
-        <MetricCard value={`${getDayCompletionPercent(todayKey())}%`} label="Today all habits" accent={COLORS.habits} />
-        <MetricCard value={getBestStreak(habit)} label="Best streak" accent={COLORS.habits} />
+        <MetricCard value={getStreak(habit)} label="Current streak" accent={colors.habits} />
+        <MetricCard value={`${getDayCompletionPercent(todayKey())}%`} label="Today all habits" accent={colors.habits} />
+        <MetricCard value={getBestStreak(habit)} label="Best streak" accent={colors.habits} />
       </View>
-      <View style={styles.calendarCard}>
+      <View style={[styles.calendarCard, { backgroundColor: colors.white, borderColor: colors.borderLight }]}>
         <SectionHeader>{format(month, 'MMMM yyyy')}</SectionHeader>
         <View style={styles.weekHeader}>
           {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, index) => (
-            <Text key={`${d}-${index}`} style={styles.weekText}>{d}</Text>
+            <Text key={`${d}-${index}`} style={[styles.weekText, { color: colors.textHint }]}>{d}</Text>
           ))}
         </View>
         <View style={styles.calendar}>
@@ -57,13 +60,13 @@ export default function HabitDetail({ navigation, route }) {
                 <View
                   style={[
                     styles.dayDot,
-                    done ? styles.done : null,
-                    !done && inMonth && !future ? styles.missed : null,
-                    key === todayKey() ? styles.today : null,
+                    done ? { backgroundColor: colors.habits } : null,
+                    !done && inMonth && !future ? { backgroundColor: colors.pillMindful.bg } : null,
+                    key === todayKey() ? { borderColor: colors.habits, borderWidth: 1.5 } : null,
                     !inMonth ? styles.outside : null,
                   ]}
                 >
-                  <Text style={[styles.dayText, done ? styles.doneText : null]}>{format(day, 'd')}</Text>
+                  <Text style={[styles.dayText, { color: colors.textSecondary }, done ? { color: colors.white, fontWeight: '700' } : null]}>{format(day, 'd')}</Text>
                 </View>
               </View>
             );
@@ -72,17 +75,17 @@ export default function HabitDetail({ navigation, route }) {
       </View>
       <View style={styles.legend}>
         <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: COLORS.habits }]} />
-          <Text style={styles.legendText}>Done</Text>
+          <View style={[styles.legendDot, { backgroundColor: colors.habits }]} />
+          <Text style={[styles.legendText, { color: colors.textSecondary }]}>Done</Text>
         </View>
         <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: COLORS.pillMindful.bg }]} />
-          <Text style={styles.legendText}>Missed</Text>
+          <View style={[styles.legendDot, { backgroundColor: colors.pillMindful.bg }]} />
+          <Text style={[styles.legendText, { color: colors.textSecondary }]}>Missed</Text>
         </View>
       </View>
-      <View style={styles.infoCard}>
-        <Ionicons name="information-circle-outline" size={16} color={COLORS.textSecondary} />
-        <Text selectable style={styles.info}>Started on {displayDate(habit.createdAt)} · Goal is {habit.goal}</Text>
+      <View style={[styles.infoCard, { backgroundColor: colors.white, borderColor: colors.borderLight }]}>
+        <Ionicons name="information-circle-outline" size={16} color={colors.textSecondary} />
+        <Text selectable style={[styles.info, { color: colors.textSecondary }]}>Started on {displayDate(habit.createdAt)} · Goal is {habit.goal}</Text>
       </View>
     </Screen>
   );
@@ -91,8 +94,6 @@ export default function HabitDetail({ navigation, route }) {
 const styles = StyleSheet.create({
   grid: { flexDirection: 'row', gap: 8 },
   calendarCard: {
-    backgroundColor: COLORS.white,
-    borderColor: COLORS.borderLight,
     borderRadius: RADIUS.lg,
     borderWidth: 1,
     gap: 12,
@@ -100,25 +101,19 @@ const styles = StyleSheet.create({
     ...SHADOWS.subtle,
   },
   weekHeader: { flexDirection: 'row', marginBottom: 6 },
-  weekText: { color: COLORS.textHint, flex: 1, fontSize: 11, fontWeight: '600', textAlign: 'center' },
+  weekText: { flex: 1, fontSize: 11, fontWeight: '600', textAlign: 'center' },
   calendar: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 8 },
   dayCell: { alignItems: 'center', width: `${100 / 7}%` },
   dayDot: { alignItems: 'center', borderRadius: 16, height: 32, justifyContent: 'center', width: 32 },
-  done: { backgroundColor: COLORS.habits },
-  missed: { backgroundColor: COLORS.pillMindful.bg },
-  today: { borderColor: COLORS.habits, borderWidth: 1.5 },
   outside: { opacity: 0.28 },
-  dayText: { color: COLORS.textSecondary, fontSize: 11 },
-  doneText: { color: COLORS.white, fontWeight: '700' },
+  dayText: { fontSize: 11 },
   legend: { flexDirection: 'row', gap: 20, paddingHorizontal: 4 },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   legendDot: { width: 10, height: 10, borderRadius: 5 },
-  legendText: { color: COLORS.textSecondary, fontSize: 12, fontWeight: '500' },
+  legendText: { fontSize: 12, fontWeight: '500' },
   infoCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.white,
-    borderColor: COLORS.borderLight,
     borderRadius: RADIUS.md,
     borderWidth: 1,
     padding: 12,
@@ -126,5 +121,5 @@ const styles = StyleSheet.create({
     marginTop: 4,
     ...SHADOWS.subtle,
   },
-  info: { color: COLORS.textSecondary, fontSize: 12, fontWeight: '500', flex: 1 },
+  info: { fontSize: 12, fontWeight: '500', flex: 1 },
 });

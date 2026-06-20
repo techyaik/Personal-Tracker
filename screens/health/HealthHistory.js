@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { isAfter, parseISO, subMonths, subWeeks } from 'date-fns';
-import { COLORS } from '../../constants/colors';
+import { useTheme } from '../../theme/ThemeContext';
 import { AppHeader } from '../../components/AppHeader';
 import { EmptyState } from '../../components/EmptyState';
 import { ListRow } from '../../components/Rows';
@@ -12,7 +12,10 @@ import { displayDate } from '../../utils/dates';
 
 export default function HealthHistory({ navigation }) {
   const { logs, loading } = useHealth();
+  const { colors } = useTheme();
+  
   const [filter, setFilter] = useState('All');
+  
   const filtered = useMemo(() => {
     const now = new Date();
     if (filter === 'Week') return logs.filter((log) => isAfter(parseISO(log.date), subWeeks(now, 1)));
@@ -25,7 +28,7 @@ export default function HealthHistory({ navigation }) {
       <AppHeader title="History" onBack={() => navigation.goBack()} />
       <View style={styles.filters}>
         {['Week', 'Month', 'All'].map((item) => (
-          <Pill key={item} label={item} selected={filter === item} onPress={() => setFilter(item)} palette={COLORS.pillLearning} />
+          <Pill key={item} label={item} selected={filter === item} onPress={() => setFilter(item)} palette={colors.pillLearning} />
         ))}
       </View>
       {filtered.length ? (

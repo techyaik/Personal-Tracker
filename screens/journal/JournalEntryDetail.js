@@ -1,6 +1,6 @@
 import React from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
-import { COLORS } from '../../constants/colors';
+import { useTheme } from '../../theme/ThemeContext';
 import { MOODS } from '../../constants/categories';
 import { AppHeader } from '../../components/AppHeader';
 import { PrimaryButton } from '../../components/PrimaryButton';
@@ -11,9 +11,12 @@ import { RADIUS, SHADOWS } from '../../constants/theme';
 
 export default function JournalEntryDetail({ navigation, route }) {
   const { entries, deleteEntry } = useJournal();
+  const { colors, resolveThemeColor } = useTheme();
+
   const entry = entries.find((item) => item.id === route.params?.entry?.id) || route.params?.entry;
   if (!entry) return null;
   const mood = MOODS.find((item) => item.key === entry.mood);
+  const activeMoodColor = mood ? resolveThemeColor(mood.color) : colors.textSecondary;
 
   const confirmDelete = () =>
     Alert.alert('Delete entry?', 'This journal entry will be removed permanently.', [
@@ -30,26 +33,26 @@ export default function JournalEntryDetail({ navigation, route }) {
         title={displayDate(entry.date, 'MMM d')}
         onBack={() => navigation.goBack()}
         rightIcon="pencil"
-        accent={COLORS.journal}
+        accent={colors.journal}
         onRight={() => navigation.navigate('JournalNewEntry', { entry })}
       />
-      <View style={styles.card}>
+      <View style={[styles.card, { backgroundColor: colors.white, borderColor: colors.borderLight }]}>
         <Text style={styles.emoji}>{mood?.emoji}</Text>
-        <Text selectable style={[styles.mood, { color: mood?.color }]}>{mood?.label}</Text>
-        <Text selectable style={styles.title}>{entry.title}</Text>
-        <Text selectable style={styles.body}>{entry.body}</Text>
-        <Text selectable style={styles.footer}>Created {displayDate(entry.createdAt)} · Updated {displayDate(entry.updatedAt)}</Text>
+        <Text selectable style={[styles.mood, { color: activeMoodColor }]}>{mood?.label}</Text>
+        <Text selectable style={[styles.title, { color: colors.textPrimary }]}>{entry.title}</Text>
+        <Text selectable style={[styles.body, { color: colors.textPrimary }]}>{entry.body}</Text>
+        <Text selectable style={[styles.footer, { color: colors.textHint }]}>Created {displayDate(entry.createdAt)} · Updated {displayDate(entry.updatedAt)}</Text>
       </View>
-      <PrimaryButton title="Delete entry" color={COLORS.danger} onPress={confirmDelete} />
+      <PrimaryButton title="Delete entry" color={colors.danger} onPress={confirmDelete} style={{ marginTop: 8 }} />
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: COLORS.white, borderColor: COLORS.borderLight, borderRadius: RADIUS.lg, borderWidth: 1, gap: 12, padding: 16, ...SHADOWS.subtle },
+  card: { borderRadius: RADIUS.lg, borderWidth: 1, gap: 12, padding: 16, ...SHADOWS.subtle },
   emoji: { fontSize: 42, textAlign: 'center' },
   mood: { fontSize: 13, fontWeight: '700', textAlign: 'center' },
-  title: { color: COLORS.textPrimary, fontSize: 18, fontWeight: '700' },
-  body: { color: COLORS.textPrimary, fontSize: 15, lineHeight: 23 },
-  footer: { color: COLORS.textHint, fontSize: 10 },
+  title: { fontSize: 18, fontWeight: '700' },
+  body: { fontSize: 15, lineHeight: 23 },
+  footer: { fontSize: 10 },
 });

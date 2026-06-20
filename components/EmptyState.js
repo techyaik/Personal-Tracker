@@ -1,20 +1,24 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS } from '../constants/colors';
+import { useTheme } from '../theme/ThemeContext';
 import { RADIUS, SHADOWS } from '../constants/theme';
 import { PrimaryButton } from './PrimaryButton';
 
 export function EmptyState({ icon, message, action, actionLabel, accent }) {
+  const { colors, resolveThemeColor } = useTheme();
+
+  const activeAccent = accent ? resolveThemeColor(accent) : colors.health;
+
   return (
-    <View style={styles.empty}>
-      <View style={styles.iconWrap}>
-        <Ionicons name={icon} size={36} color={accent || COLORS.health} />
+    <View style={[styles.empty, { backgroundColor: colors.white, borderColor: colors.borderLight }]}>
+      <View style={[styles.iconWrap, { backgroundColor: colors.surface }]}>
+        <Ionicons name={icon} size={36} color={activeAccent} />
       </View>
-      <Text selectable style={styles.message}>
+      <Text selectable style={[styles.message, { color: colors.textSecondary }]}>
         {message}
       </Text>
-      {action ? <PrimaryButton title={actionLabel} onPress={action} color={accent} /> : null}
+      {action ? <PrimaryButton title={actionLabel} onPress={action} color={activeAccent} /> : null}
     </View>
   );
 }
@@ -22,8 +26,6 @@ export function EmptyState({ icon, message, action, actionLabel, accent }) {
 const styles = StyleSheet.create({
   empty: {
     alignItems: 'center',
-    backgroundColor: COLORS.white,
-    borderColor: COLORS.borderLight,
     borderRadius: RADIUS.lg,
     borderWidth: 1,
     gap: 14,
@@ -33,11 +35,10 @@ const styles = StyleSheet.create({
   },
   iconWrap: {
     alignItems: 'center',
-    backgroundColor: COLORS.surface,
     borderRadius: RADIUS.pill,
     height: 70,
     justifyContent: 'center',
     width: 70,
   },
-  message: { color: COLORS.textSecondary, fontSize: 14, lineHeight: 20, textAlign: 'center' },
+  message: { fontSize: 14, lineHeight: 20, textAlign: 'center' },
 });

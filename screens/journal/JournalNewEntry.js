@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
-import { COLORS } from '../../constants/colors';
+import { useTheme } from '../../theme/ThemeContext';
 import { MOODS } from '../../constants/categories';
 import { AppHeader } from '../../components/AppHeader';
 import { InputField } from '../../components/InputField';
 import { MoodPicker } from '../../components/MoodPicker';
-import { PrimaryButton } from '../../components/PrimaryButton';
 import { Screen } from '../../components/Screen';
 import { useJournal } from '../../hooks/useJournal';
 import { displayDate, todayKey } from '../../utils/dates';
@@ -14,6 +13,8 @@ import { RADIUS, SHADOWS } from '../../constants/theme';
 
 export default function JournalNewEntry({ navigation, route }) {
   const { entries, addEntry, updateEntry } = useJournal();
+  const { colors } = useTheme();
+
   const entry = entries.find((item) => item.id === route.params?.entry?.id) || route.params?.entry;
   const [mood, setMood] = useState(entry?.mood || MOODS[0].key);
   const [date, setDate] = useState(entry?.date || todayKey());
@@ -40,40 +41,38 @@ export default function JournalNewEntry({ navigation, route }) {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+    <KeyboardAvoidingView style={[styles.flex, { backgroundColor: colors.bg }]} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <Screen>
-        <AppHeader title={entry ? 'Edit entry' : 'New entry'} onBack={() => navigation.goBack()} rightText="Save" accent={COLORS.journal} onRight={save} />
+        <AppHeader title={entry ? 'Edit entry' : 'New entry'} onBack={() => navigation.goBack()} rightText="Save" accent={colors.journal} onRight={save} />
         <MoodPicker value={mood} onChange={setMood} />
         <InputField value={date} onChangeText={setDate} placeholder="YYYY-MM-DD" />
-        <Text selectable style={styles.dateText}>{displayDate(date)}</Text>
-        <InputField value={title} onChangeText={setTitle} placeholder="Give this entry a title" style={styles.titleInput} />
+        <Text selectable style={[styles.dateText, { color: colors.textSecondary }]}>{displayDate(date)}</Text>
+        <InputField value={title} onChangeText={setTitle} placeholder="Give this entry a title" style={[styles.titleInput, { backgroundColor: colors.bg, color: colors.textPrimary }]} />
         <InputField value={body} onChangeText={setBody} placeholder="Write anything..." multiline style={styles.bodyInput} />
       </Screen>
-      <View style={styles.toolbar}>
-        <Tool label="B" onPress={() => setBody((current) => current ? `**${current}**` : current)} />
-        <Tool label="I" onPress={() => setBody((current) => current ? `*${current}*` : current)} />
-        <Tool label="•" onPress={() => setBody((current) => `${current}\n- `)} />
+      <View style={[styles.toolbar, { backgroundColor: colors.white, borderTopColor: colors.borderLight }]}>
+        <Tool label="B" onPress={() => setBody((current) => current ? `**${current}**` : current)} colors={colors} />
+        <Tool label="I" onPress={() => setBody((current) => current ? `*${current}*` : current)} colors={colors} />
+        <Tool label="•" onPress={() => setBody((current) => `${current}\n- `)} colors={colors} />
       </View>
     </KeyboardAvoidingView>
   );
 }
 
-function Tool({ label, onPress }) {
+function Tool({ label, onPress, colors }) {
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.tool, pressed ? styles.toolPressed : null]}>
-      <Text style={styles.toolText}>{label}</Text>
+    <Pressable onPress={onPress} style={({ pressed }) => [styles.tool, pressed ? { backgroundColor: colors.borderLight } : null]}>
+      <Text style={[styles.toolText, { color: colors.textSecondary }]}>{label}</Text>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: COLORS.bg },
-  dateText: { color: COLORS.textSecondary, fontSize: 11 },
-  titleInput: { backgroundColor: COLORS.bg, borderWidth: 0, fontSize: 19, fontWeight: '700' },
+  flex: { flex: 1 },
+  dateText: { fontSize: 11 },
+  titleInput: { borderWidth: 0, fontSize: 19, fontWeight: '700' },
   bodyInput: { minHeight: 320 },
   toolbar: {
-    backgroundColor: COLORS.white,
-    borderTopColor: COLORS.borderLight,
     borderTopWidth: 1,
     flexDirection: 'row',
     gap: 16,
@@ -89,11 +88,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: 38,
   },
-  toolPressed: {
-    backgroundColor: COLORS.borderLight,
-  },
   toolText: {
-    color: COLORS.textSecondary,
     fontSize: 16,
     fontWeight: '700',
     textAlign: 'center',

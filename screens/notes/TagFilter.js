@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS } from '../../constants/colors';
+import { useTheme } from '../../theme/ThemeContext';
 import { AppHeader } from '../../components/AppHeader';
 import { EmptyState } from '../../components/EmptyState';
 import { Screen } from '../../components/Screen';
@@ -10,6 +10,8 @@ import { RADIUS, SHADOWS } from '../../constants/theme';
 
 export default function TagFilter({ navigation }) {
   const { notes, getAllTags } = useNotes();
+  const { colors } = useTheme();
+
   const tags = getAllTags();
   const count = (tag) => notes.filter((note) => note.tags?.includes(tag)).length;
 
@@ -19,10 +21,14 @@ export default function TagFilter({ navigation }) {
       {tags.length ? (
         <View style={styles.grid}>
           {tags.map((tag) => (
-            <Pressable key={tag} style={styles.card} onPress={() => navigation.navigate('NotesList', { tag })}>
-              <Ionicons name="pricetag" size={22} color={COLORS.notes} />
-              <Text selectable style={styles.tag}>{tag}</Text>
-              <Text selectable style={styles.count}>{count(tag)} notes</Text>
+            <Pressable
+              key={tag}
+              style={[styles.card, { backgroundColor: colors.white, borderColor: colors.borderLight }]}
+              onPress={() => navigation.navigate('NotesList', { tag })}
+            >
+              <Ionicons name="pricetag" size={22} color={colors.notes} />
+              <Text selectable style={[styles.tag, { color: colors.textPrimary }]}>{tag}</Text>
+              <Text selectable style={[styles.count, { color: colors.textSecondary }]}>{count(tag)} notes</Text>
             </Pressable>
           ))}
         </View>
@@ -36,8 +42,6 @@ export default function TagFilter({ navigation }) {
 const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   card: {
-    backgroundColor: COLORS.white,
-    borderColor: COLORS.borderLight,
     borderRadius: RADIUS.lg,
     borderWidth: 1,
     gap: 8,
@@ -45,6 +49,6 @@ const styles = StyleSheet.create({
     width: '48%',
     ...SHADOWS.subtle,
   },
-  tag: { color: COLORS.textPrimary, fontSize: 15, fontWeight: '600' },
-  count: { color: COLORS.textSecondary, fontSize: 11 },
+  tag: { fontSize: 15, fontWeight: '600' },
+  count: { fontSize: 11 },
 });

@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { addMonths, format, isSameMonth } from 'date-fns';
-import { COLORS } from '../../constants/colors';
+import { useTheme } from '../../theme/ThemeContext';
 import { MOODS } from '../../constants/categories';
 import { AppHeader } from '../../components/AppHeader';
 import { MetricCard } from '../../components/MetricCard';
@@ -14,9 +14,13 @@ import { RADIUS, SHADOWS } from '../../constants/theme';
 
 export default function MoodCalendar({ navigation }) {
   const { entries, getMoodForDate } = useJournal();
+  const { colors } = useTheme();
+
   const [month, setMonth] = useState(new Date());
   const days = monthGridDays(month);
+  
   const monthEntries = useMemo(() => entries.filter((entry) => entry.date.startsWith(format(month, 'yyyy-MM'))), [entries, month]);
+  
   const stats = useMemo(() => {
     const counts = {};
     monthEntries.forEach((entry) => {
@@ -34,32 +38,39 @@ export default function MoodCalendar({ navigation }) {
     <Screen>
       <AppHeader title="Mood calendar" onBack={() => navigation.goBack()} />
       <View style={styles.monthNav}>
-        <Pressable onPress={() => setMonth((current) => addMonths(current, -1))} style={styles.arrow}>
-          <Ionicons name="chevron-back" size={20} color={COLORS.journal} />
+        <Pressable
+          onPress={() => setMonth((current) => addMonths(current, -1))}
+          style={[styles.arrow, { backgroundColor: colors.white, borderColor: colors.borderLight }]}
+        >
+          <Ionicons name="chevron-back" size={20} color={colors.journal} />
         </Pressable>
-        <Text selectable style={styles.month}>{format(month, 'MMMM yyyy')}</Text>
-        <Pressable onPress={() => setMonth((current) => addMonths(current, 1))} style={styles.arrow}>
-          <Ionicons name="chevron-forward" size={20} color={COLORS.journal} />
+        <Text selectable style={[styles.month, { color: colors.textPrimary }]}>{format(month, 'MMMM yyyy')}</Text>
+        <Pressable
+          onPress={() => setMonth((current) => addMonths(current, 1))}
+          style={[styles.arrow, { backgroundColor: colors.white, borderColor: colors.borderLight }]}
+        >
+          <Ionicons name="chevron-forward" size={20} color={colors.journal} />
         </Pressable>
       </View>
-      <View style={styles.grid}>
+      <View style={[styles.grid, { backgroundColor: colors.white, borderColor: colors.borderLight }]}>
         {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, index) => (
-          <Text key={`${d}-${index}`} style={styles.weekText}>{d}</Text>
+          <Text key={`${d}-${index}`} style={[styles.weekText, { color: colors.textHint }]}>{d}</Text>
         ))}
         {days.map((day) => {
           const key = format(day, 'yyyy-MM-dd');
           const moodKey = getMoodForDate(key);
           const mood = MOODS.find((item) => item.key === moodKey);
+          const isToday = key === todayKey();
           return (
             <View key={key} style={styles.dayCell}>
               <View
                 style={[
                   styles.day,
-                  key === todayKey() ? styles.today : null,
+                  isToday ? { borderColor: colors.journal, borderWidth: 1.5 } : null,
                   !isSameMonth(day, month) || isFutureDate(day) ? styles.dim : null,
                 ]}
               >
-                <Text style={styles.dayNumber}>{format(day, 'd')}</Text>
+                <Text style={[styles.dayNumber, { color: colors.textSecondary }]}>{format(day, 'd')}</Text>
                 <Text style={styles.moodEmoji}>{mood?.emoji || ''}</Text>
               </View>
             </View>
@@ -72,20 +83,20 @@ export default function MoodCalendar({ navigation }) {
           <MetricCard
             value={stats.common}
             label="Common mood"
-            accent={COLORS.journal}
-            icon={<Ionicons name="happy-outline" size={16} color={COLORS.journal} />}
+            accent={colors.journal}
+            icon={<Ionicons name="happy-outline" size={16} color={colors.journal} />}
           />
           <MetricCard
             value={stats.positive}
             label="Happy + excited"
-            accent={COLORS.journal}
-            icon={<Ionicons name="sunny-outline" size={16} color={COLORS.journal} />}
+            accent={colors.journal}
+            icon={<Ionicons name="sunny-outline" size={16} color={colors.journal} />}
           />
           <MetricCard
             value={stats.heavy}
             label="Sad + stressed"
-            accent={COLORS.journal}
-            icon={<Ionicons name="cloud-outline" size={16} color={COLORS.journal} />}
+            accent={colors.journal}
+            icon={<Ionicons name="cloud-outline" size={16} color={colors.journal} />}
           />
         </View>
       </View>
@@ -95,15 +106,14 @@ export default function MoodCalendar({ navigation }) {
 
 const styles = StyleSheet.create({
   monthNav: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
-  arrow: { alignItems: 'center', backgroundColor: COLORS.white, borderColor: COLORS.borderLight, borderRadius: RADIUS.pill, borderWidth: 1, height: 38, justifyContent: 'center', width: 38, ...SHADOWS.subtle },
-  month: { color: COLORS.textPrimary, fontSize: 17, fontWeight: '700' },
-  grid: { backgroundColor: COLORS.white, borderColor: COLORS.borderLight, borderRadius: RADIUS.lg, borderWidth: 1, flexDirection: 'row', flexWrap: 'wrap', padding: 10, rowGap: 8, ...SHADOWS.subtle },
-  weekText: { color: COLORS.textHint, fontSize: 10, textAlign: 'center', width: `${100 / 7}%` },
+  arrow: { alignItems: 'center', borderRadius: RADIUS.pill, borderWidth: 1, height: 38, justifyContent: 'center', width: 38, ...SHADOWS.subtle },
+  month: { fontSize: 17, fontWeight: '700' },
+  grid: { borderRadius: RADIUS.lg, borderWidth: 1, flexDirection: 'row', flexWrap: 'wrap', padding: 10, rowGap: 8, ...SHADOWS.subtle },
+  weekText: { fontSize: 10, textAlign: 'center', width: `${100 / 7}%` },
   dayCell: { alignItems: 'center', width: `${100 / 7}%` },
   day: { alignItems: 'center', borderRadius: 18, height: 44, justifyContent: 'center', width: 40 },
-  today: { borderColor: COLORS.journal, borderWidth: 1.5 },
   dim: { opacity: 0.32 },
-  dayNumber: { color: COLORS.textSecondary, fontSize: 10 },
+  dayNumber: { fontSize: 10 },
   moodEmoji: { fontSize: 16 },
   section: { gap: 8 },
   stats: { flexDirection: 'row', gap: 8 },

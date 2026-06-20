@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
-import { COLORS } from '../../constants/colors';
+import { useTheme } from '../../theme/ThemeContext';
 import { CATEGORIES, GOALS } from '../../constants/categories';
 import { AppHeader } from '../../components/AppHeader';
 import { InputField } from '../../components/InputField';
@@ -13,6 +13,8 @@ import { RADIUS, SHADOWS } from '../../constants/theme';
 
 export default function HabitEdit({ navigation, route }) {
   const { habits, updateHabit, deleteHabit } = useHabits();
+  const { colors } = useTheme();
+
   const habit = habits.find((item) => item.id === route.params?.habit?.id) || route.params?.habit;
   const [name, setName] = useState(habit?.name || '');
   const [category, setCategory] = useState(habit?.category || 'health');
@@ -52,16 +54,32 @@ export default function HabitEdit({ navigation, route }) {
         </View>
         <InputField value={reminderTime} onChangeText={setReminderTime} placeholder="Reminder time, e.g. 07:00" />
         <SectionHeader>Goal</SectionHeader>
-        <View style={styles.segment}>
-          {GOALS.map((item) => (
-            <Text key={item} onPress={() => setGoal(item)} style={[styles.segmentText, goal === item ? styles.segmentSelected : null]}>
-              {item}
-            </Text>
-          ))}
+        <View style={[styles.segment, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}>
+          {GOALS.map((item) => {
+            const active = goal === item;
+            return (
+              <Text
+                key={item}
+                onPress={() => setGoal(item)}
+                style={[
+                  styles.segmentText,
+                  { color: colors.textSecondary },
+                  active && {
+                    backgroundColor: colors.white,
+                    borderRadius: RADIUS.sm,
+                    color: colors.habits,
+                    ...SHADOWS.subtle,
+                  },
+                ]}
+              >
+                {item}
+              </Text>
+            );
+          })}
         </View>
       </View>
-      <PrimaryButton title="Save changes" color={COLORS.habits} onPress={save} />
-      <PrimaryButton title="Delete habit" color={COLORS.danger} onPress={confirmDelete} />
+      <PrimaryButton title="Save changes" color={colors.habits} onPress={save} />
+      <PrimaryButton title="Delete habit" color={colors.danger} onPress={confirmDelete} style={{ marginTop: 8 }} />
     </Screen>
   );
 }
@@ -69,7 +87,6 @@ export default function HabitEdit({ navigation, route }) {
 const styles = StyleSheet.create({
   form: { gap: 10 },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  segment: { backgroundColor: COLORS.surface, borderColor: COLORS.borderLight, borderRadius: RADIUS.md, borderWidth: 1, flexDirection: 'row', padding: 4 },
-  segmentText: { color: COLORS.textSecondary, flex: 1, fontSize: 12, fontWeight: '600', padding: 10, textAlign: 'center', textTransform: 'capitalize' },
-  segmentSelected: { backgroundColor: COLORS.white, borderRadius: RADIUS.sm, color: COLORS.habits, ...SHADOWS.subtle },
+  segment: { borderRadius: RADIUS.md, borderWidth: 1, flexDirection: 'row', padding: 4 },
+  segmentText: { flex: 1, fontSize: 12, fontWeight: '600', padding: 10, textAlign: 'center', textTransform: 'capitalize' },
 });

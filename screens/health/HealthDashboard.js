@@ -1,7 +1,7 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS } from '../../constants/colors';
+import { useTheme } from '../../theme/ThemeContext';
 import { AppHeader } from '../../components/AppHeader';
 import { EmptyState } from '../../components/EmptyState';
 import { ListRow } from '../../components/Rows';
@@ -16,11 +16,12 @@ const formatSteps = (steps) => (steps || steps === 0 ? Number(steps).toLocaleStr
 
 export default function HealthDashboard({ navigation }) {
   const { logs, loading, getTodayLog } = useHealth();
+  const { colors } = useTheme();
   const today = getTodayLog();
 
   return (
     <Screen loading={loading}>
-      <AppHeader title="Health" rightIcon="add" accent={COLORS.health} onRight={() => navigation.navigate('HealthLogEntry')} />
+      <AppHeader title="Health" />
 
       <View style={styles.section}>
         <SectionHeader>Today — {displayDate(todayKey())}</SectionHeader>
@@ -28,35 +29,35 @@ export default function HealthDashboard({ navigation }) {
           <MetricCard
             value={today?.weight ? `${today.weight}` : '—'}
             label="Weight kg"
-            accent={COLORS.health}
-            icon={<Ionicons name="scale-outline" size={16} color={COLORS.health} />}
+            accent={colors.health}
+            icon={<Ionicons name="scale-outline" size={16} color={colors.health} />}
           />
           <MetricCard
             value={today?.sleep ? `${today.sleep}` : '—'}
             label="Sleep hrs"
-            accent={COLORS.health}
-            icon={<Ionicons name="bed-outline" size={16} color={COLORS.health} />}
+            accent={colors.health}
+            icon={<Ionicons name="bed-outline" size={16} color={colors.health} />}
           />
         </View>
         <View style={styles.grid}>
           <MetricCard
             value={formatSteps(today?.steps)}
             label="Steps"
-            accent={COLORS.health}
-            icon={<Ionicons name="walk-outline" size={16} color={COLORS.health} />}
+            accent={colors.health}
+            icon={<Ionicons name="walk-outline" size={16} color={colors.health} />}
           />
           <MetricCard
             value={today?.water ? `${today.water}` : '—'}
             label="Water glasses"
-            accent={COLORS.health}
-            icon={<Ionicons name="water-outline" size={16} color={COLORS.health} />}
+            accent={colors.health}
+            icon={<Ionicons name="water-outline" size={16} color={colors.health} />}
           />
         </View>
       </View>
 
       <PrimaryButton
         title="+ Log today"
-        color={COLORS.health}
+        color={colors.health}
         onPress={() => navigation.navigate('HealthLogEntry', { date: todayKey() })}
       />
 
@@ -65,8 +66,8 @@ export default function HealthDashboard({ navigation }) {
           <SectionHeader>Recent</SectionHeader>
           {logs.length ? (
             <Pressable onPress={() => navigation.navigate('HealthHistory')} style={styles.historyButton}>
-              <Text style={styles.historyText}>History</Text>
-              <Ionicons name="chevron-forward" size={14} color={COLORS.health} />
+              <Text style={[styles.historyText, { color: colors.health }]}>History</Text>
+              <Ionicons name="chevron-forward" size={14} color={colors.health} />
             </Pressable>
           ) : null}
         </View>
@@ -85,7 +86,7 @@ export default function HealthDashboard({ navigation }) {
             message="No logs yet. Start tracking today."
             actionLabel="+ Log today"
             action={() => navigation.navigate('HealthLogEntry', { date: todayKey() })}
-            accent={COLORS.health}
+            accent={colors.health}
           />
         )}
       </View>
@@ -98,5 +99,5 @@ const styles = StyleSheet.create({
   grid: { flexDirection: 'row', gap: 8 },
   sectionTitleRow: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
   historyButton: { alignItems: 'center', flexDirection: 'row', gap: 2 },
-  historyText: { color: COLORS.health, fontSize: 12, fontWeight: '600' },
+  historyText: { fontSize: 12, fontWeight: '600' },
 });

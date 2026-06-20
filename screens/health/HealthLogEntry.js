@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
-import { COLORS } from '../../constants/colors';
+import { useTheme } from '../../theme/ThemeContext';
 import { AppHeader } from '../../components/AppHeader';
 import { InputField } from '../../components/InputField';
 import { PrimaryButton } from '../../components/PrimaryButton';
@@ -11,6 +11,8 @@ import { todayKey } from '../../utils/dates';
 
 export default function HealthLogEntry({ navigation, route }) {
   const { logs, addLog, updateLog, deleteLog } = useHealth();
+  const { colors } = useTheme();
+  
   const editing = logs.find((log) => log.id === route.params?.entryId) || route.params?.entry;
   const [form, setForm] = useState({
     date: route.params?.date || todayKey(),
@@ -75,7 +77,7 @@ export default function HealthLogEntry({ navigation, route }) {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+    <KeyboardAvoidingView style={[styles.flex, { backgroundColor: colors.bg }]} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <View style={styles.flex}>
         <Screen>
           <AppHeader title="Log health" onBack={() => navigation.goBack()} />
@@ -87,8 +89,8 @@ export default function HealthLogEntry({ navigation, route }) {
             <InputField value={form.water} onChangeText={(v) => setValue('water', v)} placeholder="Water (glasses)" keyboardType="number-pad" />
             <InputField value={form.notes} onChangeText={(v) => setValue('notes', v)} placeholder="Notes" multiline />
           </View>
-          <PrimaryButton title="Save log" color={COLORS.health} onPress={save} />
-          {editing ? <PrimaryButton title="Delete log" color={COLORS.danger} onPress={confirmDelete} /> : null}
+          <PrimaryButton title="Save log" color={colors.health} onPress={save} />
+          {editing ? <PrimaryButton title="Delete log" color={colors.danger} onPress={confirmDelete} style={{ marginTop: 8 }} /> : null}
         </Screen>
       </View>
     </KeyboardAvoidingView>

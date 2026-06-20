@@ -1,0 +1,113 @@
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useColorScheme } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { LIGHT_COLORS, DARK_COLORS } from '../constants/colors';
+
+const ThemeContext = createContext();
+
+export const THEME_KEY = 'lifio_theme_mode_v2';
+
+export const resolveColor = (colorStr, colors) => {
+  if (!colorStr) return colorStr;
+  const lower = colorStr.toLowerCase();
+  switch (lower) {
+    case '#185fa5': return colors.health;
+    case '#534ab7': return colors.habits;
+    case '#ba7517': return colors.notes;
+    case '#993c1d': return colors.journal;
+    case '#0f6e56': return colors.tealDark;
+    case '#e1f5ee': return colors.tealLight;
+    case '#1d9e75': return colors.tealMid;
+    case '#f5f5f0': return colors.bg;
+    case '#fbfaf5': return colors.bgWarm;
+    case '#f7f7f4': return colors.surface;
+    case '#ffffff': return colors.white;
+    case '#e8e8e8': return colors.border;
+    case '#f0f0f0': return colors.borderLight;
+    case '#1a1a1a': return colors.textPrimary;
+    case '#888888': return colors.textSecondary;
+    case '#bbbbbb': return colors.textHint;
+    case '#c2410c': return colors.danger;
+    case '#fff1ec': return colors.dangerBg;
+    default:
+      if (colorStr === '#E6F1FB') return colors.accentLight.health;
+      if (colorStr === '#EEEDFE') return colors.accentLight.habits;
+      if (colorStr === '#FAEEDA') return colors.accentLight.notes;
+      if (colorStr === '#FAECE7') return colors.accentLight.journal;
+      return colorStr;
+  }
+};
+
+export function ThemeProvider({ children }) {
+  const systemColorScheme = useColorScheme();
+  const [themeMode, setThemeModeState] = useState('system'); // 'light' | 'dark' | 'system'
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    const loadTheme = async () => {
+      try {
+        const stored = await AsyncStorage.getItem(THEME_KEY);
+        if (stored) {
+          setThemeModeState(stored);
+        }
+      } catch (e) {
+        console.log('Error loading theme:', e);
+      } finally {
+        setReady(true);
+      }
+    };
+    loadTheme();
+  }, []);
+
+  const [dataVersion, setDataVersion] = useState(0);
+
+  const triggerDataRefresh = () => {
+    setDataVersion((v) => v + 1);
+  };
+
+  const setThemeMode = async (mode) => {
+    setThemeModeState(mode);
+    try {
+      await AsyncStorage.setItem(THEME_KEY, mode);
+    } catch (e) {
+      console.log('Error saving theme:', e);
+    }
+  };
+
+  const theme = themeMode === 'system' ? (systemColorScheme || 'light') : themeMode;
+  const colors = theme === 'dark' ? DARK_COLORS : LIGHT_COLORS;
+
+  const gradients = {
+    page: [colors.bgWarm, colors.bg],
+    health: [theme === 'dark' ? '#1A3C60' : '#2E7BBE', colors.health],
+    habits: [theme === 'dark' ? '#2B235E' : '#7B72DA', colors.habits],
+    notes: [theme === 'dark' ? '#4A3212' : '#D9902E', colors.notes],
+    journal: [theme === 'dark' ? '#4D2418' : '#B24B2B', colors.journal],
+  };
+
+  const contextValue = {
+    themeMode,
+    setThemeMode,
+    theme,
+    colors,
+    gradients,
+    ready,
+    resolveThemeColor: (colorStr) => resolveColor(colorStr, colors),
+    dataVersion,
+    triggerDataRefresh,
+  };
+
+  return (
+    <ThemeContext.Provider value={contextValue}>
+      {children}
+    </ThemeContext.Provider>
+  );
+}
+
+export function useTheme() {
+  const context = useContext(ThemeContext);
+  if (!context) {
+    throw new Error('useTheme must be used within a ThemeProvider');
+  }
+  return context;
+}

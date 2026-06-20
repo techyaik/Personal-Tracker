@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View, Share, Image } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { createDrawerNavigator } from '@react-navigation/drawer';
+import { createDrawerNavigator, DrawerContentScrollView } from '@react-navigation/drawer';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS } from '../constants/colors';
+import { useTheme, ThemeProvider } from '../theme/ThemeContext';
 import { RADIUS, SHADOWS } from '../constants/theme';
 import { HealthStack } from './HealthStack';
 import { HabitsStack } from './HabitsStack';
@@ -13,83 +13,139 @@ import { NotesStack } from './NotesStack';
 import { JournalStack } from './JournalStack';
 import Onboarding from '../screens/Onboarding';
 import Settings from '../screens/Settings';
-import { todayKey } from '../utils/dates';
+import Home from '../screens/Home';
+import Profile from '../screens/Profile';
+import MyPlan from '../screens/MyPlan';
+import PrivacyManagement from '../screens/PrivacyManagement';
+import Help from '../screens/Help';
+import About from '../screens/About';
 
 const Tab = createBottomTabNavigator();
 const Drawer = createDrawerNavigator();
 const ONBOARDING_KEY = 'lifio_onboarded_v2';
+const LOGO = require('../assets/lifio-logo.png');
 
 const TAB_META = {
-  HealthTab: { label: 'Health', icon: 'heart', color: COLORS.health },
-  HabitsTab: { label: 'Habits', icon: 'checkmark-circle', color: COLORS.habits },
-  NotesTab: { label: 'Notes', icon: 'document-text', color: COLORS.notes },
-  JournalTab: { label: 'Journal', icon: 'book', color: COLORS.journal },
+  HealthTab: { label: 'Health', icon: 'heart-outline', activeIcon: 'heart', color: 'health' },
+  HabitsTab: { label: 'Habits', icon: 'checkmark-circle-outline', activeIcon: 'checkmark-circle', color: 'habits' },
+  HomeTab: { label: 'Home', icon: 'home-outline', activeIcon: 'home', color: 'health' },
+  NotesTab: { label: 'Notes', icon: 'document-text-outline', activeIcon: 'document-text', color: 'notes' },
+  JournalTab: { label: 'Journal', icon: 'book-outline', activeIcon: 'book', color: 'journal' },
 };
 
-function EmptyCenterScreen() {
-  return null;
-}
-
 function MainTabs() {
+  const { colors, resolveThemeColor } = useTheme();
+
   return (
     <Tab.Navigator
-      screenOptions={({ route, navigation }) => {
+      initialRouteName="HomeTab"
+      screenOptions={({ route }) => {
         const meta = TAB_META[route.name];
-        const isCenter = route.name === 'CenterAction';
+        const tabColor = meta ? resolveThemeColor(colors[meta.color]) : colors.health;
         return {
           headerShown: false,
-          tabBarActiveTintColor: meta?.color || COLORS.health,
-          tabBarInactiveTintColor: COLORS.textHint,
+          tabBarActiveTintColor: tabColor,
+          tabBarInactiveTintColor: colors.textHint,
           tabBarStyle: styles.tabBar,
           tabBarLabel: meta?.label || '',
           tabBarLabelStyle: styles.tabLabel,
-          tabBarItemStyle: isCenter ? styles.centerItem : styles.tabItem,
-          tabBarIcon: ({ color, size }) =>
-            isCenter ? (
-              <View style={styles.centerButton}>
-                <Ionicons name="add" size={28} color={COLORS.white} />
-              </View>
-            ) : (
-              <Ionicons name={meta.icon} size={size} color={color} />
-            ),
-          tabBarButton: isCenter
-            ? (props) => (
-                <Pressable
-                  {...props}
-                  onPress={() =>
-                    navigation.navigate('HealthTab', {
-                      screen: 'HealthLogEntry',
-                      params: { date: todayKey() },
-                    })
-                  }
-                  style={styles.centerPressable}
-                >
-                  {props.children}
-                </Pressable>
-              )
-            : undefined,
+          tabBarItemStyle: styles.tabItem,
+          tabBarIcon: ({ color, size, focused }) => {
+            const iconName = focused ? meta.activeIcon : meta.icon;
+            return <Ionicons name={iconName} size={size} color={color} />;
+          },
         };
       }}
     >
       <Tab.Screen name="HealthTab" component={HealthStack} />
       <Tab.Screen name="HabitsTab" component={HabitsStack} />
-      <Tab.Screen
-        name="CenterAction"
-        component={EmptyCenterScreen}
-        options={{
-          tabBarAccessibilityLabel: 'Log health',
-          tabBarLabel: () => null,
-        }}
-      />
+      <Tab.Screen name="HomeTab" component={Home} />
       <Tab.Screen name="NotesTab" component={NotesStack} />
       <Tab.Screen name="JournalTab" component={JournalStack} />
     </Tab.Navigator>
   );
 }
 
-export default function RootNavigator() {
+function CustomDrawerContent(props) {
+  const { state, navigation } = props;
+  const { colors } = useTheme();
+
+  const activeRoute = state.routes[state.index];
+  const activeName = activeRoute.name;
+
+  const handleShare = async () => {
+    try {
+      await Share.share({
+        message: 'Personal Tracker - A bento-style companion for mindful habits, health logging, and journal entries. Download it today!',
+      });
+    } catch (error) {
+      console.log('Share error:', error);
+    }
+  };
+
+  const menuItems = [
+    { name: 'Profile', label: 'Profile', icon: 'person-outline', activeIcon: 'person' },
+    { name: 'MyPlan', label: 'My Plan', icon: 'calendar-outline', activeIcon: 'calendar' },
+    { name: 'Settings', label: 'Settings', icon: 'settings-outline', activeIcon: 'settings' },
+    { name: 'PrivacyManagement', label: 'Privacy Management', icon: 'shield-checkmark-outline', activeIcon: 'shield-checkmark' },
+    { name: 'Help', label: 'Help', icon: 'help-circle-outline', activeIcon: 'help-circle' },
+    { name: 'About', label: 'About', icon: 'information-circle-outline', activeIcon: 'information-circle' },
+  ];
+
+  return (
+    <View style={[styles.drawerContainer, { backgroundColor: colors.bgWarm }]}>
+      {/* Drawer Header */}
+      <View style={[styles.drawerHeader, { borderBottomColor: colors.borderLight }]}>
+        <Image source={LOGO} style={styles.drawerLogo} />
+        <Text style={[styles.appName, { color: colors.textPrimary }]}>Personal Tracker</Text>
+        <Text style={[styles.appSubtitle, { color: colors.textSecondary }]}>Mindful Momentum</Text>
+      </View>
+
+      <DrawerContentScrollView {...props} contentContainerStyle={styles.scrollContent}>
+        {menuItems.map((item) => {
+          const isActive = activeName === item.name;
+          return (
+            <Pressable
+              key={item.name}
+              onPress={() => navigation.navigate(item.name)}
+              style={[
+                styles.drawerItem,
+                isActive && { backgroundColor: colors.accentLight.health }
+              ]}
+            >
+              <Ionicons
+                name={isActive ? item.activeIcon : item.icon}
+                size={20}
+                color={isActive ? colors.health : colors.textSecondary}
+              />
+              <Text
+                style={[
+                  styles.drawerLabelText,
+                  { color: isActive ? colors.health : colors.textPrimary }
+                ]}
+              >
+                {item.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </DrawerContentScrollView>
+
+      {/* Share Application Footer */}
+      <View style={[styles.drawerFooter, { borderTopColor: colors.borderLight }]}>
+        <Pressable onPress={handleShare} style={styles.shareItem}>
+          <Ionicons name="share-social-outline" size={20} color={colors.health} />
+          <Text style={[styles.shareLabel, { color: colors.health }]}>Share Application</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
+function NavigatorContent() {
   const [ready, setReady] = useState(false);
   const [onboarded, setOnboarded] = useState(false);
+  const { colors, loading: themeLoading } = useTheme();
 
   useEffect(() => {
     let mounted = true;
@@ -108,10 +164,10 @@ export default function RootNavigator() {
     await AsyncStorage.setItem(ONBOARDING_KEY, 'true');
   };
 
-  if (!ready) {
+  if (!ready || themeLoading) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.bg }}>
-        <ActivityIndicator color={COLORS.health} />
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg }}>
+        <ActivityIndicator color={colors.health} />
       </View>
     );
   }
@@ -121,24 +177,19 @@ export default function RootNavigator() {
       {onboarded ? (
         <Drawer.Navigator
           id="RootDrawer"
+          drawerContent={(props) => <CustomDrawerContent {...props} />}
           screenOptions={{
             headerShown: false,
-            drawerActiveTintColor: COLORS.health,
-            drawerInactiveTintColor: COLORS.textSecondary,
             drawerStyle: styles.drawer,
-            drawerLabelStyle: styles.drawerLabel,
           }}
         >
-          <Drawer.Screen
-            name="Main"
-            component={MainTabs}
-            options={{ drawerLabel: 'Home', drawerIcon: ({ color, size }) => <Ionicons name="apps" color={color} size={size} /> }}
-          />
-          <Drawer.Screen
-            name="Settings"
-            component={Settings}
-            options={{ drawerIcon: ({ color, size }) => <Ionicons name="settings-outline" color={color} size={size} /> }}
-          />
+          <Drawer.Screen name="Main" component={MainTabs} />
+          <Drawer.Screen name="Profile" component={Profile} />
+          <Drawer.Screen name="MyPlan" component={MyPlan} />
+          <Drawer.Screen name="Settings" component={Settings} />
+          <Drawer.Screen name="PrivacyManagement" component={PrivacyManagement} />
+          <Drawer.Screen name="Help" component={Help} />
+          <Drawer.Screen name="About" component={About} />
         </Drawer.Navigator>
       ) : (
         <Onboarding onGetStarted={completeOnboarding} />
@@ -147,10 +198,18 @@ export default function RootNavigator() {
   );
 }
 
+export default function RootNavigator() {
+  return (
+    <ThemeProvider>
+      <NavigatorContent />
+    </ThemeProvider>
+  );
+}
+
 const styles = StyleSheet.create({
   tabBar: {
-    backgroundColor: COLORS.white,
-    borderTopColor: COLORS.borderLight,
+    backgroundColor: '#FFFFFF',
+    borderTopColor: '#F0F0F0',
     borderTopWidth: 1,
     height: 76,
     paddingBottom: 12,
@@ -159,29 +218,62 @@ const styles = StyleSheet.create({
   },
   tabLabel: { fontSize: 10, fontWeight: '700' },
   tabItem: { borderRadius: RADIUS.md, marginHorizontal: 1 },
-  centerItem: { alignItems: 'center', justifyContent: 'center' },
-  centerPressable: {
-    alignItems: 'center',
-    flex: 1,
-    justifyContent: 'center',
-    top: -14,
-  },
-  centerButton: {
-    alignItems: 'center',
-    backgroundColor: COLORS.health,
-    borderColor: COLORS.white,
-    borderRadius: RADIUS.pill,
-    borderWidth: 3,
-    height: 56,
-    justifyContent: 'center',
-    width: 56,
-    ...SHADOWS.glow,
-  },
   drawer: {
-    backgroundColor: COLORS.bgWarm,
     width: 286,
   },
-  drawerLabel: {
+  drawerContainer: {
+    flex: 1,
+  },
+  drawerHeader: {
+    padding: 24,
+    paddingTop: 50,
+    borderBottomWidth: 1,
+  },
+  drawerLogo: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  appName: {
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  appSubtitle: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  scrollContent: {
+    paddingTop: 12,
+  },
+  drawerItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    marginHorizontal: 8,
+    marginVertical: 2,
+    borderRadius: 8,
+  },
+  drawerLabelText: {
+    marginLeft: 16,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  drawerFooter: {
+    padding: 16,
+    borderTopWidth: 1,
+    paddingBottom: 24,
+  },
+  shareItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+  },
+  shareLabel: {
+    marginLeft: 16,
     fontSize: 14,
     fontWeight: '700',
   },

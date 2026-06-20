@@ -1,31 +1,35 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { COLORS } from '../constants/colors';
+import { useTheme } from '../theme/ThemeContext';
 import { RADIUS, SHADOWS } from '../constants/theme';
 
 export function MetricCard({ value, label, accent, icon, style }) {
-  let bgTint = COLORS.white;
-  let borderCol = COLORS.borderLight;
+  const { colors, resolveThemeColor } = useTheme();
   
-  if (accent === COLORS.health) {
-    bgTint = COLORS.accentLight.health;
-  } else if (accent === COLORS.habits) {
-    bgTint = COLORS.accentLight.habits;
-  } else if (accent === COLORS.notes) {
-    bgTint = COLORS.accentLight.notes;
-  } else if (accent === COLORS.journal) {
-    bgTint = COLORS.accentLight.journal;
+  let bgTint = colors.white;
+  let borderCol = colors.borderLight;
+  
+  const activeAccent = accent ? resolveThemeColor(accent) : colors.health;
+  
+  if (activeAccent === colors.health) {
+    bgTint = colors.accentLight.health;
+  } else if (activeAccent === colors.habits) {
+    bgTint = colors.accentLight.habits;
+  } else if (activeAccent === colors.notes) {
+    bgTint = colors.accentLight.notes;
+  } else if (activeAccent === colors.journal) {
+    bgTint = colors.accentLight.journal;
   }
 
   return (
     <View style={[styles.card, { backgroundColor: bgTint, borderColor: borderCol }, style]}>
       <View style={styles.header}>
-        <Text selectable style={styles.label} numberOfLines={1}>
+        <Text selectable style={[styles.label, { color: colors.textSecondary }]} numberOfLines={1}>
           {label}
         </Text>
         {icon}
       </View>
-      <Text selectable style={[styles.value, accent ? { color: accent } : null]} numberOfLines={1}>
+      <Text selectable style={[styles.value, { color: activeAccent || colors.textPrimary }]} numberOfLines={1}>
         {value ?? '—'}
       </Text>
     </View>
@@ -52,14 +56,12 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 11,
     fontWeight: '600',
-    color: COLORS.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   value: {
     fontSize: 24,
     fontWeight: '800',
-    color: COLORS.textPrimary,
     marginTop: 4,
   },
 });

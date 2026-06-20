@@ -1,4 +1,4 @@
-export const COLORS = {
+export const LIGHT_COLORS = {
   health: '#185FA5',
   habits: '#534AB7',
   notes: '#BA7517',
@@ -37,3 +37,45 @@ export const COLORS = {
   pillMindful: { bg: '#EEEDFE', text: '#534AB7' },
   pillOther: { bg: '#F1EFE8', text: '#5F5E5A' },
 };
+
+export const DARK_COLORS = {
+  health: '#4F98E2',
+  habits: '#7C73E8',
+  notes: '#EAB308',
+  journal: '#F97316',
+
+  tealDark: '#2ED4A5',
+  tealLight: '#1A2E26',
+  tealMid: '#1D9E75',
+
+  bg: '#141412',
+  bgWarm: '#1C1C1A',
+  surface: '#22221F',
+  surfaceElevated: '#282824',
+  surfaceTint: '#2E2D29',
+  white: '#282824',
+  border: '#3E3E39',
+  borderLight: '#343430',
+
+  textPrimary: '#F5F5F0',
+  textSecondary: '#A3A39D',
+  textHint: '#6B6B66',
+  danger: '#F87171',
+  dangerBg: '#2A1818',
+  overlay: 'rgba(0,0,0,0.6)',
+
+  accentLight: {
+    health: '#1A2E46',
+    habits: '#25214D',
+    notes: '#3C2E14',
+    journal: '#3E2018',
+  },
+
+  pillHealth: { bg: '#102C24', text: '#2ED4A5' },
+  pillLearning: { bg: '#10243C', text: '#4F98E2' },
+  pillFitness: { bg: '#352410', text: '#EAB308' },
+  pillMindful: { bg: '#201A45', text: '#7C73E8' },
+  pillOther: { bg: '#252525', text: '#A3A3A3' },
+};
+
+export const COLORS = LIGHT_COLORS;

@@ -1,17 +1,9 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useNavigation, DrawerActions } from '@react-navigation/native';
-import { COLORS } from '../constants/colors';
-import { TYPOGRAPHY } from '../constants/typography';
+import { useTheme } from '../theme/ThemeContext';
 import { RADIUS, SHADOWS } from '../constants/theme';
-
-const tintForAccent = (accent) => {
-  if (accent === COLORS.habits) return COLORS.accentLight.habits;
-  if (accent === COLORS.notes) return COLORS.accentLight.notes;
-  if (accent === COLORS.journal) return COLORS.accentLight.journal;
-  return COLORS.accentLight.health;
-};
 
 export function AppHeader({
   title,
@@ -19,13 +11,24 @@ export function AppHeader({
   rightIcon,
   onRight,
   rightText,
-  accent = COLORS.health,
+  accent,
   showMenu,
   showSettings,
 }) {
   const navigation = useNavigation();
+  const { colors, resolveThemeColor } = useTheme();
+
+  const activeAccent = accent ? resolveThemeColor(accent) : colors.health;
+  const tintColor = activeAccent;
+  
+  let bgTint = colors.accentLight.health;
+  if (tintColor === colors.habits) bgTint = colors.accentLight.habits;
+  else if (tintColor === colors.notes) bgTint = colors.accentLight.notes;
+  else if (tintColor === colors.journal) bgTint = colors.accentLight.journal;
+
   const canShowMenu = showMenu ?? !onBack;
   const canShowSettings = showSettings ?? !onBack;
+  
   const openDrawer = () => {
     try {
       navigation.dispatch(DrawerActions.openDrawer());
@@ -45,36 +48,34 @@ export function AppHeader({
     <View style={styles.header}>
       <View style={styles.side}>
         {onBack ? (
-          <Pressable onPress={onBack} style={styles.iconButton} hitSlop={10}>
-            <Ionicons name="chevron-back" size={22} color={COLORS.textPrimary} />
+          <Pressable onPress={onBack} style={[styles.iconButton, { borderColor: colors.borderLight, backgroundColor: colors.white }]} hitSlop={10}>
+            <Ionicons name="chevron-back" size={22} color={colors.textPrimary} />
           </Pressable>
         ) : canShowMenu ? (
-          <Pressable onPress={openDrawer} style={[styles.iconButton, styles.neutralButton]} hitSlop={10}>
-            <Ionicons name="menu" size={22} color={COLORS.textPrimary} />
+          <Pressable onPress={openDrawer} style={styles.drawerButton} hitSlop={10}>
+            <MaterialIcons name="segment" size={26} color={colors.textPrimary} />
           </Pressable>
         ) : null}
       </View>
-      <Text selectable style={[TYPOGRAPHY.title, styles.title]} numberOfLines={1}>
-        {title}
-      </Text>
+      <View style={{ flex: 1 }} />
       <View style={[styles.side, styles.right]}>
         {canShowSettings ? (
-          <Pressable onPress={openSettings} style={[styles.iconButton, styles.neutralButton]} hitSlop={10}>
-            <Ionicons name="settings-outline" size={19} color={COLORS.textPrimary} />
+          <Pressable onPress={openSettings} style={[styles.iconButton, { borderColor: colors.borderLight, backgroundColor: colors.white }, SHADOWS.subtle]} hitSlop={10}>
+            <Ionicons name="settings-outline" size={19} color={colors.textPrimary} />
           </Pressable>
         ) : null}
         {rightIcon ? (
           <Pressable
             onPress={onRight}
-            style={[styles.iconButton, SHADOWS.subtle, { backgroundColor: tintForAccent(accent), borderColor: accent }]}
+            style={[styles.iconButton, SHADOWS.subtle, { backgroundColor: bgTint, borderColor: tintColor }]}
             hitSlop={10}
           >
-            <Ionicons name={rightIcon} size={20} color={accent} />
+            <Ionicons name={rightIcon} size={20} color={tintColor} />
           </Pressable>
         ) : null}
         {rightText ? (
           <Pressable onPress={onRight} hitSlop={10}>
-            <Text style={[styles.rightText, { color: accent }]}>{rightText}</Text>
+            <Text style={[styles.rightText, { color: tintColor }]}>{rightText}</Text>
           </Pressable>
         ) : null}
       </View>
@@ -86,7 +87,7 @@ const styles = StyleSheet.create({
   header: { alignItems: 'center', flexDirection: 'row', minHeight: 40 },
   side: { width: 88, flexDirection: 'row' },
   right: { gap: 8, justifyContent: 'flex-end' },
-  title: { flex: 1, textAlign: 'center' },
+  title: { flex: 1, textAlign: 'center', fontSize: 18, fontWeight: '700' },
   iconButton: {
     width: 36,
     height: 36,
@@ -95,10 +96,11 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.pill,
     borderWidth: 1,
   },
-  neutralButton: {
-    backgroundColor: COLORS.white,
-    borderColor: COLORS.borderLight,
-    ...SHADOWS.subtle,
+  drawerButton: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   rightText: { fontSize: 14, fontWeight: '600' },
 });

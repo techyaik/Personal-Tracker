@@ -1,20 +1,34 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
-import { COLORS } from '../constants/colors';
+import { useTheme } from '../theme/ThemeContext';
 import { RADIUS } from '../constants/theme';
 
 export function Pill({ label, palette, selected, onPress }) {
-  const color = palette || COLORS.pillOther;
+  const { colors, resolveThemeColor } = useTheme();
+
+  // Resolve palette dynamically if passed
+  let activeBg = colors.pillOther.bg;
+  let activeText = colors.pillOther.text;
+
+  if (palette) {
+    activeBg = palette.bg ? resolveThemeColor(palette.bg) : activeBg;
+    activeText = palette.text ? resolveThemeColor(palette.text) : activeText;
+  }
+
   const Container = onPress ? Pressable : Pressable;
+
   return (
     <Container
       onPress={onPress}
       style={[
         styles.pill,
-        { backgroundColor: selected ? color.text : color.bg, borderColor: color.text },
+        {
+          backgroundColor: selected ? activeText : activeBg,
+          borderColor: activeText,
+        },
       ]}
     >
-      <Text style={[styles.text, { color: selected ? COLORS.white : color.text }]} numberOfLines={1}>
+      <Text style={[styles.text, { color: selected ? colors.white : activeText }]} numberOfLines={1}>
         {label}
       </Text>
     </Container>

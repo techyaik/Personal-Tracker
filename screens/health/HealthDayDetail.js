@@ -2,8 +2,7 @@ import React from 'react';
 import { Alert, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { BarChart } from 'react-native-chart-kit';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS } from '../../constants/colors';
-import { TYPOGRAPHY } from '../../constants/typography';
+import { useTheme } from '../../theme/ThemeContext';
 import { AppHeader } from '../../components/AppHeader';
 import { MetricCard } from '../../components/MetricCard';
 import { PrimaryButton } from '../../components/PrimaryButton';
@@ -16,13 +15,15 @@ import { RADIUS, SHADOWS } from '../../constants/theme';
 export default function HealthDayDetail({ navigation, route }) {
   const { logs, loading, deleteLog } = useHealth();
   const { width } = useWindowDimensions();
+  const { colors } = useTheme();
+  
   const entry = logs.find((log) => log.id === route.params?.entryId) || route.params?.entry;
 
   if (!entry) {
     return (
       <Screen loading={loading}>
         <AppHeader title="Detail" onBack={() => navigation.goBack()} />
-        <Text style={TYPOGRAPHY.body}>Log not found.</Text>
+        <Text style={{ color: colors.textPrimary, padding: 16 }}>Log not found.</Text>
       </Screen>
     );
   }
@@ -45,35 +46,35 @@ export default function HealthDayDetail({ navigation, route }) {
         title={`${displayDate(entry.date, 'MMM d')} detail`}
         onBack={() => navigation.goBack()}
         rightIcon="pencil"
-        accent={COLORS.health}
+        accent={colors.health}
         onRight={() => navigation.navigate('HealthLogEntry', { entryId: entry.id, entry })}
       />
       <View style={styles.grid}>
         <MetricCard
           value={entry.weight ?? '—'}
           label="Weight kg"
-          accent={COLORS.health}
-          icon={<Ionicons name="scale-outline" size={16} color={COLORS.health} />}
+          accent={colors.health}
+          icon={<Ionicons name="scale-outline" size={16} color={colors.health} />}
         />
         <MetricCard
           value={entry.sleep ?? '—'}
           label="Sleep hrs"
-          accent={COLORS.health}
-          icon={<Ionicons name="bed-outline" size={16} color={COLORS.health} />}
+          accent={colors.health}
+          icon={<Ionicons name="bed-outline" size={16} color={colors.health} />}
         />
       </View>
       <View style={styles.grid}>
         <MetricCard
           value={entry.steps?.toLocaleString?.() ?? '—'}
           label="Steps"
-          accent={COLORS.health}
-          icon={<Ionicons name="walk-outline" size={16} color={COLORS.health} />}
+          accent={colors.health}
+          icon={<Ionicons name="walk-outline" size={16} color={colors.health} />}
         />
         <MetricCard
           value={entry.water ?? '—'}
           label="Water glasses"
-          accent={COLORS.health}
-          icon={<Ionicons name="water-outline" size={16} color={COLORS.health} />}
+          accent={colors.health}
+          icon={<Ionicons name="water-outline" size={16} color={colors.health} />}
         />
       </View>
       <View style={styles.section}>
@@ -85,23 +86,25 @@ export default function HealthDayDetail({ navigation, route }) {
           fromZero
           showValuesOnTopOfBars
           chartConfig={{
-            backgroundGradientFrom: COLORS.white,
-            backgroundGradientTo: COLORS.white,
-            color: () => COLORS.tealMid,
-            labelColor: () => COLORS.textSecondary,
+            backgroundGradientFrom: colors.white,
+            backgroundGradientTo: colors.white,
+            color: () => colors.tealMid,
+            labelColor: () => colors.textSecondary,
             decimalPlaces: 0,
-            propsForBackgroundLines: { stroke: COLORS.borderLight },
+            propsForBackgroundLines: { stroke: colors.borderLight },
           }}
-          style={styles.chart}
+          style={[styles.chart, { backgroundColor: colors.white }]}
         />
       </View>
       {entry.notes ? (
         <View style={styles.section}>
           <SectionHeader>Notes</SectionHeader>
-          <Text selectable style={styles.notes}>{entry.notes}</Text>
+          <Text selectable style={[styles.notes, { backgroundColor: colors.white, borderColor: colors.borderLight, color: colors.textPrimary }]}>
+            {entry.notes}
+          </Text>
         </View>
       ) : null}
-      <PrimaryButton title="Delete log" color={COLORS.danger} onPress={confirmDelete} />
+      <PrimaryButton title="Delete log" color={colors.danger} onPress={confirmDelete} />
     </Screen>
   );
 }
@@ -111,11 +114,8 @@ const styles = StyleSheet.create({
   section: { gap: 8 },
   chart: { borderRadius: RADIUS.lg, ...SHADOWS.subtle },
   notes: {
-    backgroundColor: COLORS.white,
-    borderColor: COLORS.borderLight,
     borderRadius: RADIUS.md,
     borderWidth: 1,
-    color: COLORS.textPrimary,
     fontSize: 14,
     lineHeight: 20,
     padding: 14,

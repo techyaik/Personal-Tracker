@@ -1,25 +1,33 @@
 import React from 'react';
 import { StyleSheet, TextInput } from 'react-native';
-import { COLORS } from '../constants/colors';
+import { useTheme } from '../theme/ThemeContext';
 import { RADIUS } from '../constants/theme';
 
 export function InputField(props) {
+  const { colors } = useTheme();
+
   return (
     <TextInput
-      placeholderTextColor={COLORS.textHint}
+      placeholderTextColor={colors.textHint}
       {...props}
-      style={[styles.input, props.multiline ? styles.multiline : null, props.style]}
+      style={[
+        styles.input,
+        {
+          backgroundColor: colors.white,
+          borderColor: colors.borderLight,
+          color: colors.textPrimary,
+        },
+        props.multiline ? styles.multiline : null,
+        props.style,
+      ]}
     />
   );
 }
 
 const styles = StyleSheet.create({
   input: {
-    backgroundColor: COLORS.white,
-    borderColor: COLORS.borderLight,
     borderRadius: RADIUS.md,
     borderWidth: 1,
-    color: COLORS.textPrimary,
     fontSize: 14,
     minHeight: 50,
     paddingHorizontal: 14,

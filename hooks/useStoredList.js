@@ -1,14 +1,26 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { getData, setData } from '../storage/storage';
+import { useTheme } from '../theme/ThemeContext';
 
 const memoryCache = {};
+
+export function clearMemoryCache() {
+  console.log('[useStoredList] clearMemoryCache called');
+  for (const k in memoryCache) {
+    console.log('[useStoredList] deleting cache key:', k);
+    delete memoryCache[k];
+  }
+}
 
 export function useStoredList(key) {
   const hydratedRef = useRef(Object.prototype.hasOwnProperty.call(memoryCache, key));
   const mountedRef = useRef(true);
   const [items, setItems] = useState(() => memoryCache[key] || []);
   const [loading, setLoading] = useState(!hydratedRef.current);
+  
+  const themeContext = useTheme();
+  const dataVersion = themeContext?.dataVersion ?? 0;
 
   useEffect(() => {
     mountedRef.current = true;
@@ -28,6 +40,15 @@ export function useStoredList(key) {
     setLoading(false);
     return data;
   }, [key]);
+
+  useEffect(() => {
+    console.log('[useStoredList] dataVersion changed:', dataVersion, 'for key:', key);
+    if (dataVersion > 0) {
+      console.log('[useStoredList] clearing cache and refreshing for key:', key);
+      delete memoryCache[key];
+      refresh({ silent: true });
+    }
+  }, [dataVersion, refresh, key]);
 
   useFocusEffect(
     useCallback(() => {

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS } from '../../constants/colors';
+import { useTheme } from '../../theme/ThemeContext';
 import { AppHeader } from '../../components/AppHeader';
 import { InputField } from '../../components/InputField';
 import { Pill } from '../../components/Pill';
@@ -14,6 +14,8 @@ const wrap = (text, prefix, suffix = prefix) => (text ? `${prefix}${text}${suffi
 
 export default function NoteEditor({ navigation, route }) {
   const { notes, addNote, updateNote, deleteNote, getAllTags } = useNotes();
+  const { colors } = useTheme();
+
   const note = notes.find((item) => item.id === route.params?.note?.id) || route.params?.note;
   const [id] = useState(note?.id || Date.now().toString());
   const [title, setTitle] = useState(note?.title || '');
@@ -75,10 +77,10 @@ export default function NoteEditor({ navigation, route }) {
   const existingTags = getAllTags();
 
   return (
-    <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+    <KeyboardAvoidingView style={[styles.flex, { backgroundColor: colors.bg }]} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <Screen>
-        <AppHeader title={note ? 'Edit note' : 'New note'} onBack={saveAndBack} rightText="Save" accent={COLORS.notes} onRight={saveAndBack} />
-        <InputField value={title} onChangeText={setTitle} placeholder="Title" style={styles.titleInput} />
+        <AppHeader title={note ? 'Edit note' : 'New note'} onBack={saveAndBack} rightText="Save" accent={colors.notes} onRight={saveAndBack} />
+        <InputField value={title} onChangeText={setTitle} placeholder="Title" style={[styles.titleInput, { backgroundColor: colors.bg, color: colors.textPrimary }]} />
         <InputField value={body} onChangeText={setBody} placeholder="Start writing..." multiline style={styles.bodyInput} />
         <View style={styles.tags}>
           {existingTags.map((tag) => (
@@ -87,28 +89,28 @@ export default function NoteEditor({ navigation, route }) {
               label={tag}
               selected={tags.includes(tag)}
               onPress={() => setTags((current) => (current.includes(tag) ? current.filter((item) => item !== tag) : [...current, tag]))}
-              palette={COLORS.pillFitness}
+              palette={colors.pillFitness}
             />
           ))}
-          <Pill label="+ Add tag" onPress={() => setTagModal(true)} palette={COLORS.pillFitness} />
+          <Pill label="+ Add tag" onPress={() => setTagModal(true)} palette={colors.pillFitness} />
         </View>
       </Screen>
-      <View style={styles.toolbar}>
-        <Tool label="B" onPress={() => setBody((current) => wrap(current, '**'))} />
-        <Tool label="I" onPress={() => setBody((current) => wrap(current, '*'))} />
-        <Tool icon="list" onPress={() => setBody((current) => `${current}\n- `)} />
-        <Tool icon="link" onPress={() => setBody((current) => `${current}\n[title](https://)`)} />
-        <Tool icon={pinned ? 'pin' : 'pin-outline'} active={pinned} onPress={() => setPinned((current) => !current)} />
-        <Tool icon="trash-outline" danger onPress={confirmDelete} />
+      <View style={[styles.toolbar, { backgroundColor: colors.white, borderTopColor: colors.borderLight }]}>
+        <Tool label="B" onPress={() => setBody((current) => wrap(current, '**'))} colors={colors} />
+        <Tool label="I" onPress={() => setBody((current) => wrap(current, '*'))} colors={colors} />
+        <Tool icon="list" onPress={() => setBody((current) => `${current}\n- `)} colors={colors} />
+        <Tool icon="link" onPress={() => setBody((current) => `${current}\n[title](https://)`)} colors={colors} />
+        <Tool icon={pinned ? 'pin' : 'pin-outline'} active={pinned} onPress={() => setPinned((current) => !current)} colors={colors} />
+        <Tool icon="trash-outline" danger onPress={confirmDelete} colors={colors} />
       </View>
       <Modal visible={tagModal} transparent animationType="fade">
-        <View style={styles.modalBackdrop}>
+        <View style={[styles.modalBackdrop, { backgroundColor: colors.overlay }]}>
           <Pressable style={StyleSheet.absoluteFill} onPress={() => setTagModal(false)} />
-          <Pressable style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Add tag</Text>
+          <Pressable style={[styles.modalCard, { backgroundColor: colors.white }]}>
+            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Add tag</Text>
             <InputField value={newTag} onChangeText={setNewTag} placeholder="Tag name" autoFocus />
-            <Pressable onPress={addTag} style={styles.modalButton}>
-              <Text style={styles.modalButtonText}>Add</Text>
+            <Pressable onPress={addTag} style={[styles.modalButton, { backgroundColor: colors.notes }]}>
+              <Text style={[styles.modalButtonText, { color: colors.white }]}>Add</Text>
             </Pressable>
           </Pressable>
         </View>
@@ -117,26 +119,24 @@ export default function NoteEditor({ navigation, route }) {
   );
 }
 
-function Tool({ icon, label, onPress, danger, active }) {
+function Tool({ icon, label, onPress, danger, active, colors }) {
   return (
-    <Pressable onPress={onPress} style={[styles.tool, active ? styles.toolActive : null]}>
+    <Pressable onPress={onPress} style={[styles.tool, active ? [styles.toolActive, { backgroundColor: colors.surface }] : null]}>
       {icon ? (
-        <Ionicons name={icon} size={20} color={danger ? COLORS.danger : active ? COLORS.notes : COLORS.textSecondary} />
+        <Ionicons name={icon} size={20} color={danger ? colors.danger : active ? colors.notes : colors.textSecondary} />
       ) : (
-        <Text style={[styles.toolLabel, { color: active ? COLORS.notes : COLORS.textSecondary }]}>{label}</Text>
+        <Text style={[styles.toolLabel, { color: active ? colors.notes : colors.textSecondary }]}>{label}</Text>
       )}
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: COLORS.bg },
-  titleInput: { backgroundColor: COLORS.bg, borderWidth: 0, fontSize: 22, fontWeight: '600' },
+  flex: { flex: 1 },
+  titleInput: { borderWidth: 0, fontSize: 22, fontWeight: '600' },
   bodyInput: { minHeight: 300 },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   toolbar: {
-    backgroundColor: COLORS.white,
-    borderTopColor: COLORS.borderLight,
     borderTopWidth: 1,
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -146,10 +146,10 @@ const styles = StyleSheet.create({
   },
   tool: { alignItems: 'center', borderRadius: RADIUS.pill, height: 38, justifyContent: 'center', width: 38 },
   toolLabel: { fontSize: 15, fontWeight: '700' },
-  toolActive: { backgroundColor: COLORS.surface, ...SHADOWS.subtle },
-  modalBackdrop: { alignItems: 'center', backgroundColor: COLORS.overlay, flex: 1, justifyContent: 'center', padding: 24 },
-  modalCard: { backgroundColor: COLORS.white, borderRadius: RADIUS.lg, gap: 12, padding: 18, width: '100%', ...SHADOWS.soft },
-  modalTitle: { color: COLORS.textPrimary, fontSize: 17, fontWeight: '700' },
-  modalButton: { alignItems: 'center', backgroundColor: COLORS.notes, borderRadius: RADIUS.md, padding: 13, ...SHADOWS.subtle },
-  modalButtonText: { color: COLORS.white, fontWeight: '600' },
+  toolActive: { ...SHADOWS.subtle },
+  modalBackdrop: { alignItems: 'center', flex: 1, justifyContent: 'center', padding: 24 },
+  modalCard: { borderRadius: RADIUS.lg, gap: 12, padding: 18, width: '100%', ...SHADOWS.soft },
+  modalTitle: { fontSize: 17, fontWeight: '700' },
+  modalButton: { alignItems: 'center', borderRadius: RADIUS.md, padding: 13, ...SHADOWS.subtle },
+  modalButtonText: { fontWeight: '600' },
 });

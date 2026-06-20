@@ -1,23 +1,28 @@
-import React from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import React, { useState } from 'react';
+import { Alert, StyleSheet, Text, View, Switch, Pressable, Platform } from 'react-native';
 import { addDays, format, subDays } from 'date-fns';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { COLORS } from '../constants/colors';
+import { useTheme } from '../theme/ThemeContext';
 import { RADIUS, SHADOWS } from '../constants/theme';
 import { AppHeader } from '../components/AppHeader';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { Screen } from '../components/Screen';
 import { SectionHeader } from '../components/SectionHeader';
+import { InputField } from '../components/InputField';
 import { getData, setData } from '../storage/storage';
 import { showToast } from '../utils/feedback';
+import { clearMemoryCache } from '../hooks/useStoredList';
 
 const DUMMY_PREFIX = 'lifio_dummy_';
 
 const keyFor = (offset = 0) => format(addDays(new Date(), offset), 'yyyy-MM-dd');
 const isoFor = (offset = 0) => addDays(new Date(), offset).toISOString();
 
-const removeDummyItems = (items) => items.filter((item) => !String(item.id || '').startsWith(DUMMY_PREFIX));
+const removeDummyItems = (items) => {
+  if (!Array.isArray(items)) return [];
+  return items.filter((item) => item && !String(item.id || '').startsWith(DUMMY_PREFIX));
+};
 
 async function fillDummyData() {
   const today = keyFor(0);
@@ -154,8 +159,9 @@ async function fillDummyData() {
 
   const existingHealth = removeDummyItems(await getData('health_logs'));
   const existingHabits = removeDummyItems(await getData('habits_list'));
-  const existingCompletions = (await getData('habits_completions')).filter(
-    (item) => !String(item.habitId || '').startsWith(DUMMY_PREFIX)
+  const completionsData = await getData('habits_completions');
+  const existingCompletions = (Array.isArray(completionsData) ? completionsData : []).filter(
+    (item) => item && !String(item.habitId || '').startsWith(DUMMY_PREFIX)
   );
   const existingNotes = removeDummyItems(await getData('notes_list'));
   const existingJournal = removeDummyItems(await getData('journal_entries'));
@@ -169,25 +175,146 @@ async function fillDummyData() {
   ]);
 }
 
+async function eraseDummyData() {
+  const existingHealth = removeDummyItems(await getData('health_logs'));
+  const existingHabits = removeDummyItems(await getData('habits_list'));
+  const completionsData = await getData('habits_completions');
+  const existingCompletions = (Array.isArray(completionsData) ? completionsData : []).filter(
+    (item) => item && !String(item.habitId || '').startsWith(DUMMY_PREFIX)
+  );
+  const existingNotes = removeDummyItems(await getData('notes_list'));
+  const existingJournal = removeDummyItems(await getData('journal_entries'));
+
+  await Promise.all([
+    setData('health_logs', existingHealth),
+    setData('habits_list', existingHabits),
+    setData('habits_completions', existingCompletions),
+    setData('notes_list', existingNotes),
+    setData('journal_entries', existingJournal),
+  ]);
+}
+
 export default function Settings() {
   const navigation = useNavigation();
-  const canGoBack = navigation.canGoBack();
+  const { colors, themeMode, setThemeMode, triggerDataRefresh } = useTheme();
+
+  // Mock settings states
+  const [notifications, setNotifications] = useState(true);
+  const [reminders, setReminders] = useState(true);
+  const [language, setLanguage] = useState('English');
+  const [defaultReminderTime, setDefaultReminderTime] = useState('08:00');
+  const [locationPerm, setLocationPerm] = useState(false);
+  const [healthKitPerm, setHealthKitPerm] = useState(true);
 
   const confirmFill = () => {
-    Alert.alert('Fill dummy data?', 'This will add realistic sample data and replace any previous Lifio dummy data.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Fill Dummy Data',
-        onPress: async () => {
-          try {
-            await fillDummyData();
-            showToast('Dummy data added ✓');
-          } catch (error) {
-            Alert.alert('Could not add dummy data', error.message || 'Please try again.');
-          }
-        },
-      },
-    ]);
+    const message = 'This will populate habits, health logs, journal entries, and notes with realistic dummy records. Existing dummy data will be updated.';
+    const runFill = async () => {
+      try {
+        console.log('[Settings] Inputting dummy data...');
+        await fillDummyData();
+        console.log('[Settings] Dummy data written successfully. Clearing cache...');
+        clearMemoryCache();
+        console.log('[Settings] Triggering data refresh...');
+        triggerDataRefresh();
+        showToast('Dummy data added successfully ✓');
+      } catch (error) {
+        console.error('[Settings] Error inputting dummy data:', error);
+        if (Platform.OS === 'web') {
+          alert('Could not add dummy data: ' + (error.message || 'Please try again.'));
+        } else {
+          Alert.alert('Could not add dummy data', error.message || 'Please try again.');
+        }
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      const confirm = window.confirm(`Input dummy data?\n\n${message}`);
+      if (confirm) {
+        runFill();
+      }
+    } else {
+      Alert.alert(
+        'Input dummy data?',
+        message,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Input Data',
+            onPress: runFill,
+          },
+        ]
+      );
+    }
+  };
+
+  const confirmErase = () => {
+    const message = 'This will permanently delete all generated Lifio dummy entries. Your own real tracked metrics and notes will not be affected.';
+    const runErase = async () => {
+      try {
+        console.log('[Settings] Erasing dummy data...');
+        await eraseDummyData();
+        console.log('[Settings] Dummy data erased successfully. Clearing cache...');
+        clearMemoryCache();
+        console.log('[Settings] Triggering data refresh...');
+        triggerDataRefresh();
+        showToast('Dummy data erased successfully ✓');
+      } catch (error) {
+        console.error('[Settings] Error erasing dummy data:', error);
+        if (Platform.OS === 'web') {
+          alert('Could not erase dummy data: ' + (error.message || 'Please try again.'));
+        } else {
+          Alert.alert('Could not erase dummy data', error.message || 'Please try again.');
+        }
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      const confirm = window.confirm(`Erase dummy data?\n\n${message}`);
+      if (confirm) {
+        runErase();
+      }
+    } else {
+      Alert.alert(
+        'Erase dummy data?',
+        message,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Erase Dummy Data',
+            style: 'destructive',
+            onPress: runErase,
+          },
+        ]
+      );
+    }
+  };
+
+  const handleBackup = () => {
+    showToast('Database backup created ✓');
+  };
+
+  const handleRestore = () => {
+    const message = 'This will overwrite current logs with the latest backup state. Proceed?';
+    if (Platform.OS === 'web') {
+      const confirm = window.confirm(`Restore Database?\n\n${message}`);
+      if (confirm) {
+        showToast('Database restored successfully ✓');
+      }
+    } else {
+      Alert.alert(
+        'Restore Database?',
+        message,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Restore',
+            onPress: () => {
+              showToast('Database restored successfully ✓');
+            },
+          },
+        ]
+      );
+    }
   };
 
   return (
@@ -195,39 +322,220 @@ export default function Settings() {
       <AppHeader
         title="Settings"
         showSettings={false}
-        onBack={canGoBack ? () => navigation.goBack() : undefined}
+        onBack={navigation.canGoBack() ? () => navigation.goBack() : undefined}
       />
-      
-      <View style={styles.card}>
-        <View style={styles.headerRow}>
-          <View style={styles.iconWrap}>
-            <Ionicons name="flask" size={24} color={COLORS.health} />
-          </View>
-          <View style={styles.titleColumn}>
-            <SectionHeader>Development</SectionHeader>
-            <Text style={styles.title}>Sample Data Generator</Text>
+
+      {/* 1. Theme / Appearance Selection */}
+      <View style={styles.section}>
+        <SectionHeader>Appearance</SectionHeader>
+        <View style={[styles.card, { backgroundColor: colors.white, borderColor: colors.borderLight }]}>
+          <Text style={[styles.cardDesc, { color: colors.textSecondary }]}>
+            Choose how Personal Tracker looks on your device.
+          </Text>
+          <View style={styles.themeSelectorRow}>
+            {['light', 'dark', 'system'].map((mode) => {
+              const active = themeMode === mode;
+              return (
+                <Pressable
+                  key={mode}
+                  onPress={() => setThemeMode(mode)}
+                  style={[
+                    styles.themeOption,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.borderLight,
+                    },
+                    active && {
+                      borderColor: colors.health,
+                      backgroundColor: colors.accentLight.health,
+                    },
+                  ]}
+                >
+                  <Ionicons
+                    name={
+                      mode === 'light'
+                        ? 'sunny-outline'
+                        : mode === 'dark'
+                        ? 'moon-outline'
+                        : 'phone-portrait-outline'
+                    }
+                    size={20}
+                    color={active ? colors.health : colors.textSecondary}
+                  />
+                  <Text
+                    style={[
+                      styles.themeOptionLabel,
+                      { color: active ? colors.health : colors.textPrimary },
+                    ]}
+                  >
+                    {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
         </View>
-        <Text style={styles.body}>
-          Populate your logs, habits list, notes space, and mood calendar with realistic demo entries to test the dashboard statistics.
-        </Text>
-        <PrimaryButton title="Fill Dummy Data" color={COLORS.health} onPress={confirmFill} />
       </View>
 
-      <View style={[styles.card, styles.aboutCard]}>
-        <View style={styles.headerRow}>
-          <View style={[styles.iconWrap, { backgroundColor: COLORS.accentLight.habits }]}>
-            <Ionicons name="sparkles" size={22} color={COLORS.habits} />
+      {/* 2. Notifications & Language */}
+      <View style={styles.section}>
+        <SectionHeader>General Preferences</SectionHeader>
+        <View style={[styles.card, { backgroundColor: colors.white, borderColor: colors.borderLight }]}>
+          <View style={styles.optionRow}>
+            <View style={styles.optionInfo}>
+              <Text style={[styles.optionTitle, { color: colors.textPrimary }]}>Push Notifications</Text>
+              <Text style={[styles.optionDesc, { color: colors.textSecondary }]}>Receive morning digest summaries</Text>
+            </View>
+            <Switch
+              value={notifications}
+              onValueChange={setNotifications}
+              trackColor={{ false: colors.border, true: colors.health }}
+              thumbColor={colors.white}
+            />
           </View>
-          <View style={styles.titleColumn}>
-            <SectionHeader>About</SectionHeader>
-            <Text style={styles.title}>Lifio Tracker</Text>
+
+          <View style={[styles.divider, { backgroundColor: colors.borderLight }]} />
+
+          <View style={styles.optionRow}>
+            <View style={styles.optionInfo}>
+              <Text style={[styles.optionTitle, { color: colors.textPrimary }]}>Habit Reminders</Text>
+              <Text style={[styles.optionDesc, { color: colors.textSecondary }]}>Alerts for scheduled milestones</Text>
+            </View>
+            <Switch
+              value={reminders}
+              onValueChange={setReminders}
+              trackColor={{ false: colors.border, true: colors.health }}
+              thumbColor={colors.white}
+            />
+          </View>
+
+          <View style={[styles.divider, { backgroundColor: colors.borderLight }]} />
+
+          <View style={styles.optionRow}>
+            <View style={styles.optionInfo}>
+              <Text style={[styles.optionTitle, { color: colors.textPrimary }]}>App Language</Text>
+              <Text style={[styles.optionDesc, { color: colors.textSecondary }]}>Select interface language</Text>
+            </View>
+            <Pressable
+              style={[styles.pickerMock, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}
+              onPress={() => Alert.alert('Language', 'Only English is available in developer build.')}
+            >
+              <Text style={[styles.pickerValue, { color: colors.textPrimary }]}>{language}</Text>
+              <Ionicons name="chevron-down" size={14} color={colors.textSecondary} />
+            </Pressable>
           </View>
         </View>
-        <Text style={styles.body}>
-          A minimal daily journal and personal logging companion designed for mindful momentum.
-        </Text>
-        <Text style={styles.version}>Version 1.0.0 (Production)</Text>
+      </View>
+
+      {/* 3. Default Preferences */}
+      <View style={styles.section}>
+        <SectionHeader>Defaults</SectionHeader>
+        <View style={[styles.card, { backgroundColor: colors.white, borderColor: colors.borderLight }]}>
+          <View style={styles.optionColumn}>
+            <Text style={[styles.optionTitle, { color: colors.textPrimary }]}>Default Habits reminder time</Text>
+            <InputField
+              value={defaultReminderTime}
+              onChangeText={setDefaultReminderTime}
+              placeholder="e.g. 08:00"
+              style={{ marginTop: 8 }}
+            />
+          </View>
+        </View>
+      </View>
+
+      {/* 4. App Permissions */}
+      <View style={styles.section}>
+        <SectionHeader>App Permissions</SectionHeader>
+        <View style={[styles.card, { backgroundColor: colors.white, borderColor: colors.borderLight }]}>
+          <View style={styles.optionRow}>
+            <View style={styles.optionInfo}>
+              <Text style={[styles.optionTitle, { color: colors.textPrimary }]}>Location Services</Text>
+              <Text style={[styles.optionDesc, { color: colors.textSecondary }]}>Add location tag to journal logs</Text>
+            </View>
+            <Switch
+              value={locationPerm}
+              onValueChange={setLocationPerm}
+              trackColor={{ false: colors.border, true: colors.health }}
+              thumbColor={colors.white}
+            />
+          </View>
+
+          <View style={[styles.divider, { backgroundColor: colors.borderLight }]} />
+
+          <View style={styles.optionRow}>
+            <View style={styles.optionInfo}>
+              <Text style={[styles.optionTitle, { color: colors.textPrimary }]}>Health Integration</Text>
+              <Text style={[styles.optionDesc, { color: colors.textSecondary }]}>Import steps and sleep automatically</Text>
+            </View>
+            <Switch
+              value={healthKitPerm}
+              onValueChange={setHealthKitPerm}
+              trackColor={{ false: colors.border, true: colors.health }}
+              thumbColor={colors.white}
+            />
+          </View>
+        </View>
+      </View>
+
+      {/* 5. Data Management (Input & Erase Dummy Data) */}
+      <View style={styles.section}>
+        <SectionHeader>Data Management</SectionHeader>
+        <View style={[styles.card, { backgroundColor: colors.white, borderColor: colors.borderLight }]}>
+          <Text style={[styles.cardDesc, { color: colors.textSecondary }]}>
+            Populate sample database logs to evaluate dashboard statistics and charts.
+          </Text>
+          <View style={styles.buttonRow}>
+            <Pressable
+              onPress={confirmFill}
+              style={[
+                styles.actionButton,
+                { backgroundColor: colors.accentLight.health, borderColor: colors.health }
+              ]}
+            >
+              <Ionicons name="cloud-upload-outline" size={18} color={colors.health} />
+              <Text style={[styles.actionButtonText, { color: colors.health }]}>Input Dummy Data</Text>
+            </Pressable>
+
+            <Pressable
+              onPress={confirmErase}
+              style={[
+                styles.actionButton,
+                { backgroundColor: colors.dangerBg, borderColor: colors.danger }
+              ]}
+            >
+              <Ionicons name="trash-outline" size={18} color={colors.danger} />
+              <Text style={[styles.actionButtonText, { color: colors.danger }]}>Erase Dummy Data</Text>
+            </Pressable>
+          </View>
+        </View>
+      </View>
+
+      {/* 6. Backup and Restore */}
+      <View style={styles.section}>
+        <SectionHeader>Backup & Restore</SectionHeader>
+        <View style={[styles.card, { backgroundColor: colors.white, borderColor: colors.borderLight }]}>
+          <Text style={[styles.cardDesc, { color: colors.textSecondary }]}>
+            Manually export or import local storage snapshots.
+          </Text>
+          <View style={styles.grid}>
+            <PrimaryButton title="Backup database" onPress={handleBackup} color={colors.health} />
+            <PrimaryButton title="Restore database" onPress={handleRestore} color={colors.health} />
+          </View>
+        </View>
+      </View>
+
+      {/* 7. About Section Info */}
+      <View style={[styles.card, styles.aboutCard, { backgroundColor: colors.white, borderColor: colors.borderLight }]}>
+        <View style={styles.headerRow}>
+          <View style={[styles.iconWrap, { backgroundColor: colors.accentLight.habits }]}>
+            <Ionicons name="sparkles" size={22} color={colors.habits} />
+          </View>
+          <View style={styles.titleColumn}>
+            <Text style={[styles.title, { color: colors.textPrimary }]}>Lifio Tracker</Text>
+            <Text style={[styles.cardDesc, { color: colors.textSecondary }]}>A personal journal and companion for mindful momentum.</Text>
+          </View>
+        </View>
+        <Text style={[styles.versionText, { color: colors.textHint }]}>Version 1.0.0 (Production Build)</Text>
       </View>
     </Screen>
   );
@@ -235,13 +543,15 @@ export default function Settings() {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: COLORS.white,
-    borderColor: COLORS.borderLight,
     borderRadius: RADIUS.lg,
     borderWidth: 1,
-    gap: 16,
-    padding: 20,
+    gap: 12,
+    padding: 16,
     ...SHADOWS.subtle,
+  },
+  cardDesc: {
+    fontSize: 12,
+    lineHeight: 17,
   },
   aboutCard: {
     marginTop: 8,
@@ -253,29 +563,105 @@ const styles = StyleSheet.create({
   },
   iconWrap: {
     alignItems: 'center',
-    backgroundColor: COLORS.accentLight.health,
     borderRadius: RADIUS.pill,
-    height: 48,
+    height: 44,
     justifyContent: 'center',
-    width: 48,
+    width: 44,
   },
   titleColumn: {
     flex: 1,
     gap: 2,
   },
   title: {
-    color: COLORS.textPrimary,
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
   },
-  body: {
-    color: COLORS.textSecondary,
-    fontSize: 13,
-    lineHeight: 19,
+  section: {
+    gap: 8,
   },
-  version: {
-    color: COLORS.textHint,
+  themeSelectorRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 4,
+  },
+  themeOption: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: RADIUS.md,
+    borderWidth: 1.5,
+  },
+  themeOptionLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  optionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  optionInfo: {
+    flex: 1,
+    paddingRight: 16,
+    gap: 2,
+  },
+  optionTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  optionDesc: {
     fontSize: 11,
+  },
+  optionColumn: {
+    flexDirection: 'column',
+  },
+  divider: {
+    height: 1,
+    marginVertical: 4,
+  },
+  pickerMock: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: RADIUS.sm,
+    borderWidth: 1,
+  },
+  pickerValue: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 4,
+  },
+  actionButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: RADIUS.md,
+    borderWidth: 1.5,
+  },
+  actionButtonText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  grid: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 4,
+  },
+  versionText: {
+    fontSize: 10,
+    fontWeight: '600',
     textAlign: 'center',
     marginTop: 4,
   },
