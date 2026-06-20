@@ -5,3 +5,7 @@ node_modules/
 .expo-server.log
 .npm-cache/
 npm-debug.log*
+android/
+ios/
+web-build/
+dist/
