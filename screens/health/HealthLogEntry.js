@@ -7,7 +7,7 @@ import { PrimaryButton } from '../../components/PrimaryButton';
 import { Screen } from '../../components/Screen';
 import { useHealth } from '../../hooks/useHealth';
 import { showToast } from '../../utils/feedback';
-import { todayKey } from '../../utils/dates';
+import { todayKey, displayDate } from '../../utils/dates';
 
 export default function HealthLogEntry({ navigation, route }) {
   const { logs, addLog, updateLog, deleteLog } = useHealth();
@@ -39,13 +39,42 @@ export default function HealthLogEntry({ navigation, route }) {
   const setValue = (key, value) => setForm((current) => ({ ...current, [key]: value }));
 
   const save = async () => {
+    const trimmedDate = form.date.trim();
+    if (!trimmedDate) {
+      Alert.alert('Date required', 'Please enter a valid date in YYYY-MM-DD format.');
+      return;
+    }
+    if (displayDate(trimmedDate) === 'Invalid date') {
+      Alert.alert('Invalid date', 'Please enter a valid date in YYYY-MM-DD format.');
+      return;
+    }
+
     const hasMetric = ['weight', 'sleep', 'steps', 'water', 'notes'].some((key) => String(form[key]).trim());
     if (!hasMetric) {
       Alert.alert('Add at least one metric', 'Fill one field before saving this health log.');
       return;
     }
+
+    // Input Validation
+    if (form.weight && (isNaN(Number(form.weight)) || Number(form.weight) < 0)) {
+      Alert.alert('Invalid weight', 'Please enter a valid positive number for weight.');
+      return;
+    }
+    if (form.sleep && (isNaN(Number(form.sleep)) || Number(form.sleep) < 0 || Number(form.sleep) > 24)) {
+      Alert.alert('Invalid sleep hours', 'Please enter a valid number of sleep hours (between 0 and 24).');
+      return;
+    }
+    if (form.steps && (isNaN(Number.parseInt(form.steps, 10)) || Number.parseInt(form.steps, 10) < 0)) {
+      Alert.alert('Invalid steps', 'Please enter a valid positive integer for steps.');
+      return;
+    }
+    if (form.water && (isNaN(Number.parseInt(form.water, 10)) || Number.parseInt(form.water, 10) < 0)) {
+      Alert.alert('Invalid water count', 'Please enter a valid positive integer for water glasses.');
+      return;
+    }
+
     const payload = {
-      date: form.date,
+      date: trimmedDate,
       weight: form.weight ? Number(form.weight) : null,
       sleep: form.sleep ? Number(form.sleep) : null,
       steps: form.steps ? Number.parseInt(form.steps, 10) : null,

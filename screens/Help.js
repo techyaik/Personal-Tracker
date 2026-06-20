@@ -20,7 +20,7 @@ export default function Help({ navigation }) {
     },
     {
       q: 'Is my tracked data secure?',
-      a: 'Absolutely. Personal Tracker stores all data locally in sandboxed on-device storage. No information is uploaded to central servers or shared with third parties.',
+      a: 'Absolutely. Lifio stores all data locally in sandboxed on-device storage. No information is uploaded to central servers or shared with third parties.',
     },
     {
       q: 'How do I erase dummy data?',

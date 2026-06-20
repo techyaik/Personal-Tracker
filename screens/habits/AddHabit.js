@@ -25,11 +25,19 @@ export default function AddHabit({ navigation }) {
       Alert.alert('Name required', 'Give this habit a name before saving.');
       return;
     }
+    const trimmedTime = reminderTime.trim();
+    if (trimmedTime) {
+      const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+      if (!timeRegex.test(trimmedTime)) {
+        Alert.alert('Invalid time format', 'Please enter reminder time in HH:MM format (24-hour, e.g. 07:30 or 18:45).');
+        return;
+      }
+    }
     await addHabit({
       id: Date.now().toString(),
       name: name.trim(),
       category,
-      reminderTime: reminderTime.trim() || null,
+      reminderTime: trimmedTime || null,
       goal,
       createdAt: new Date().toISOString(),
     });

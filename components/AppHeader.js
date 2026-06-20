@@ -24,7 +24,7 @@ export function AppHeader({
   let bgTint = colors.accentLight.health;
   if (tintColor === colors.habits) bgTint = colors.accentLight.habits;
   else if (tintColor === colors.notes) bgTint = colors.accentLight.notes;
-  else if (tintColor === colors.journal) bgTint = colors.accentLight.journal;
+  else if (tintColor === colors.wallet) bgTint = colors.accentLight.wallet;
 
   const canShowMenu = showMenu ?? !onBack;
   const canShowSettings = showSettings ?? !onBack;
@@ -57,7 +57,7 @@ export function AppHeader({
           </Pressable>
         ) : null}
       </View>
-      <View style={{ flex: 1 }} />
+      <Text style={[styles.title, { color: colors.textPrimary }]} numberOfLines={1}>{title}</Text>
       <View style={[styles.side, styles.right]}>
         {canShowSettings ? (
           <Pressable onPress={openSettings} style={[styles.iconButton, { borderColor: colors.borderLight, backgroundColor: colors.white }, SHADOWS.subtle]} hitSlop={10}>

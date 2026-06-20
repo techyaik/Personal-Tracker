@@ -20,7 +20,7 @@ export default function About({ navigation }) {
             <Ionicons name="sparkles" size={24} color={colors.health} />
           </View>
           <View style={styles.titleColumn}>
-            <Text style={[styles.title, { color: colors.textPrimary }]}>Personal Tracker</Text>
+            <Text style={[styles.title, { color: colors.textPrimary }]}>Lifio</Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Mindful Momentum Companion</Text>
           </View>
         </View>

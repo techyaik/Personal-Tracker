@@ -1,0 +1,449 @@
+import React, { useMemo, useState } from 'react';
+import { Alert, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { addMonths, format, isToday, isYesterday, parseISO } from 'date-fns';
+import { useTheme } from '../../theme/ThemeContext';
+import { AppHeader } from '../../components/AppHeader';
+import { EmptyState } from '../../components/EmptyState';
+import { Pill } from '../../components/Pill';
+import { Screen } from '../../components/Screen';
+import { SectionHeader } from '../../components/SectionHeader';
+import { WalletBalance } from '../../components/WalletBalance';
+import { TransactionItem } from '../../components/TransactionItem';
+import { WalletAccountList } from '../../components/WalletAccountList';
+import { WalletModal } from '../../components/WalletModal';
+import { TransactionModal } from '../../components/TransactionModal';
+import { useWallet } from '../../hooks/useWallet';
+import { todayKey } from '../../utils/dates';
+import { RADIUS, SHADOWS } from '../../constants/theme';
+
+const EXPENSE_CATEGORIES = ['Food', 'Transport', 'Bills', 'Fun', 'Shopping', 'Health', 'Travel', 'Other'];
+const INCOME_CATEGORIES = ['Salary', 'Freelance', 'Gift', 'Investment', 'Other'];
+const TYPE_FILTERS = [
+  { key: 'all', label: 'All' },
+  { key: 'out', label: 'Spent' },
+  { key: 'in', label: 'Got Paid' },
+  { key: 'transfer', label: 'Transfers' },
+];
+
+export default function WalletList({ navigation }) {
+  const { colors } = useTheme();
+  
+  // Custom hook manages state automatically (wallets and transactions)
+  const {
+    wallets,
+    transactions,
+    loading,
+    addWallet,
+    editWallet,
+    deleteWallet,
+    addTransaction,
+    editTransaction,
+    deleteTransaction,
+  } = useWallet();
+
+  const [month, setMonth] = useState(new Date());
+  const [selectedWalletId, setSelectedWalletId] = useState('all');
+  const [activeType, setActiveType] = useState('all');
+  const [activeCategory, setActiveCategory] = useState('All');
+
+  // Modals visibility states
+  const [walletModalVisible, setWalletModalVisible] = useState(false);
+  const [editingWallet, setEditingWallet] = useState(null);
+
+  const [txModalVisible, setTxModalVisible] = useState(false);
+  const [editingTx, setEditingTx] = useState(null);
+
+  // Month navigation handlers
+  const handlePrevMonth = () => setMonth((prev) => addMonths(prev, -1));
+  const handleNextMonth = () => setMonth((prev) => addMonths(prev, 1));
+
+  const monthKey = format(month, 'yyyy-MM');
+  const monthLabel = format(month, 'MMMM');
+
+  // 1. Filter transactions by selected Month AND selected Account
+  const monthTransactions = useMemo(() => {
+    return transactions.filter((tx) => {
+      // Month match check
+      const matchesMonth = tx.date && tx.date.startsWith(monthKey);
+      if (!matchesMonth) return false;
+
+      // Account filter check
+      if (selectedWalletId === 'all') return true;
+      if (tx.type === 'transfer') {
+        return tx.fromWalletId === selectedWalletId || tx.toWalletId === selectedWalletId;
+      }
+      return tx.walletId === selectedWalletId;
+    });
+  }, [transactions, monthKey, selectedWalletId]);
+
+  // 2. Filter transactions by active Type & Category
+  const filteredTransactions = useMemo(() => {
+    return monthTransactions.filter((tx) => {
+      // Type match check
+      if (activeType !== 'all' && tx.type !== activeType) return false;
+
+      // Category match check
+      if (activeCategory !== 'All' && tx.cat !== activeCategory) return false;
+
+      return true;
+    });
+  }, [monthTransactions, activeType, activeCategory]);
+
+  // Compute category filters list dynamically depending on activeType
+  const categoryFiltersList = useMemo(() => {
+    const list = ['All'];
+    if (activeType === 'out') {
+      list.push(...EXPENSE_CATEGORIES);
+    } else if (activeType === 'in') {
+      list.push(...INCOME_CATEGORIES);
+    } else if (activeType === 'transfer') {
+      list.push('Transfer');
+    } else {
+      // 'all' type: combine all unique categories
+      const combined = new Set([...EXPENSE_CATEGORIES, ...INCOME_CATEGORIES, 'Transfer']);
+      list.push(...combined);
+    }
+    return list;
+  }, [activeType]);
+
+  // If the activeCategory is no longer available in the new list, reset it to 'All'
+  React.useEffect(() => {
+    if (!categoryFiltersList.includes(activeCategory)) {
+      setActiveCategory('All');
+    }
+  }, [categoryFiltersList, activeCategory]);
+
+  // Calculate Monthly In/Out totals (transfers are excluded)
+  const totals = useMemo(() => {
+    let totalIn = 0;
+    let totalOut = 0;
+
+    monthTransactions.forEach((tx) => {
+      const amt = Number(tx.amount) || 0;
+      if (tx.type === 'in') {
+        // Income is a deposit to the active wallet (or any wallet if all selected)
+        if (selectedWalletId === 'all' || tx.walletId === selectedWalletId) {
+          totalIn += amt;
+        }
+      } else if (tx.type === 'out') {
+        // Expense is a deduction from the active wallet
+        if (selectedWalletId === 'all' || tx.walletId === selectedWalletId) {
+          totalOut += amt;
+        }
+      }
+    });
+
+    return { totalIn, totalOut };
+  }, [monthTransactions, selectedWalletId]);
+
+  // Selected Account balance
+  const activeBalance = useMemo(() => {
+    if (selectedWalletId === 'all') {
+      return wallets.reduce((sum, w) => sum + (w.balance ?? 0), 0);
+    }
+    const currentWallet = wallets.find((w) => w.id === selectedWalletId);
+    return currentWallet ? currentWallet.balance : 0;
+  }, [wallets, selectedWalletId]);
+
+  // Group transaction list items with day headers
+  const listData = useMemo(() => {
+    const data = [];
+    const grouped = {};
+
+    filteredTransactions.forEach((tx) => {
+      (grouped[tx.date] = grouped[tx.date] || []).push(tx);
+    });
+
+    const sortedDates = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
+
+    sortedDates.forEach((date) => {
+      const dateItems = grouped[date];
+      dateItems.forEach((tx, idx) => {
+        data.push({
+          type: 'item',
+          tx,
+          showHeader: idx === 0,
+          date,
+        });
+      });
+    });
+
+    return data;
+  }, [filteredTransactions]);
+
+  const getDayHeaderLabel = (dateStr) => {
+    try {
+      const parsed = parseISO(dateStr);
+      if (isToday(parsed)) return 'Today';
+      if (isYesterday(parsed)) return 'Yesterday';
+      return format(parsed, 'MMM d');
+    } catch (e) {
+      return dateStr;
+    }
+  };
+
+  // Wallet Modal Handlers
+  const handleAddWalletClick = () => {
+    setEditingWallet(null);
+    setWalletModalVisible(true);
+  };
+
+  const handleEditWalletClick = (wallet) => {
+    setEditingWallet(wallet);
+    setWalletModalVisible(true);
+  };
+
+  const handleSaveWallet = async (walletData) => {
+    if (editingWallet) {
+      await editWallet(walletData.id, walletData);
+      Alert.alert('Account updated ✓', `Account "${walletData.name}" has been updated.`);
+    } else {
+      await addWallet(walletData);
+      Alert.alert('Account created ✓', `Account "${walletData.name}" is ready.`);
+    }
+    setWalletModalVisible(false);
+  };
+
+  const handleDeleteWallet = async (id) => {
+    if (wallets.length <= 1) {
+      Alert.alert('Cannot delete', 'You must keep at least one active account.');
+      return;
+    }
+    await deleteWallet(id);
+    setSelectedWalletId('all');
+    setWalletModalVisible(false);
+    Alert.alert('Account deleted ✓', 'The account and all related logs were deleted.');
+  };
+
+  // Transaction Modal Handlers
+  const handleAddTxClick = () => {
+    setEditingTx(null);
+    setTxModalVisible(true);
+  };
+
+  const handleEditTxClick = (tx) => {
+    setEditingTx(tx);
+    setTxModalVisible(true);
+  };
+
+  const handleSaveTx = async (txData) => {
+    if (editingTx) {
+      await editTransaction(txData.id, txData);
+      Alert.alert('Transaction updated ✓', 'The transaction changes were saved.');
+    } else {
+      await addTransaction(txData);
+      Alert.alert('Transaction logged ✓', 'The transaction has been added.');
+    }
+    setTxModalVisible(false);
+  };
+
+  const handleDeleteTxClick = (tx) => {
+    Alert.alert(
+      'Delete Transaction?',
+      `Delete "${tx.label}" for $${Number(tx.amount).toFixed(2)}? This action cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            await deleteTransaction(tx.id);
+            Alert.alert('Transaction deleted ✓');
+          },
+        },
+      ]
+    );
+  };
+
+  const header = (
+    <View style={styles.headerContainer}>
+      <AppHeader title="Wallet" />
+
+      {/* 1. Accounts Scroll list */}
+      <WalletAccountList
+        wallets={wallets}
+        selectedWalletId={selectedWalletId}
+        onSelect={setSelectedWalletId}
+        onEdit={handleEditWalletClick}
+        onAdd={handleAddWalletClick}
+      />
+
+      {/* 2. Monthly Balance Tracker Card */}
+      <WalletBalance
+        balance={activeBalance}
+        totalIn={totals.totalIn}
+        totalOut={totals.totalOut}
+        monthLabel={monthLabel}
+        onPrevMonth={handlePrevMonth}
+        onNextMonth={handleNextMonth}
+      />
+
+      {/* 3. Transaction Type Filters */}
+      <View style={styles.filterSection}>
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Type</Text>
+        <View style={styles.filterBar}>
+          {TYPE_FILTERS.map((f) => (
+            <Pill
+              key={f.key}
+              label={f.label}
+              selected={activeType === f.key}
+              onPress={() => setActiveType(f.key)}
+              palette={colors.pillMindful}
+            />
+          ))}
+        </View>
+      </View>
+
+      {/* 4. Category Filters Scrollbar */}
+      <View style={styles.filterSection}>
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Category</Text>
+        <FlatList
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          data={categoryFiltersList}
+          keyExtractor={(item) => item}
+          renderItem={({ item }) => (
+            <View style={{ marginRight: 6 }}>
+              <Pill
+                label={item}
+                selected={activeCategory === item}
+                onPress={() => setActiveCategory(item)}
+                palette={colors.pillFitness}
+              />
+            </View>
+          )}
+          contentContainerStyle={{ paddingVertical: 2 }}
+        />
+      </View>
+
+      <Text style={[styles.historyHeader, { color: colors.textSecondary }]}>History</Text>
+    </View>
+  );
+
+  return (
+    <View style={styles.container}>
+      <Screen loading={loading} scroll={false}>
+        <FlatList
+          data={listData}
+          keyExtractor={(item) => item.tx.id}
+          ListHeaderComponent={header}
+          renderItem={({ item }) => (
+            <View>
+              {item.showHeader ? (
+                <View style={styles.sectionHeader}>
+                  <SectionHeader>{getDayHeaderLabel(item.date)}</SectionHeader>
+                </View>
+              ) : null}
+              <View style={[styles.itemBox, { backgroundColor: colors.white }]}>
+                <TransactionItem
+                  transaction={item.tx}
+                  onPress={() => handleEditTxClick(item.tx)}
+                  onDelete={() => handleDeleteTxClick(item.tx)}
+                />
+              </View>
+            </View>
+          )}
+          ListEmptyComponent={
+            <EmptyState
+              icon="wallet-outline"
+              message="No transactions logged for these filters."
+              accent={colors.wallet}
+            />
+          }
+          contentContainerStyle={styles.list}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        />
+
+        {/* Floating Transaction Creator Button */}
+        <Pressable
+          onPress={handleAddTxClick}
+          style={({ pressed }) => [
+            styles.fab,
+            { backgroundColor: colors.wallet, opacity: pressed ? 0.9 : 1 },
+          ]}
+        >
+          <Ionicons name="add" size={28} color={colors.white} />
+        </Pressable>
+      </Screen>
+
+      {/* Wallets Creator/Editor Modal */}
+      <WalletModal
+        visible={walletModalVisible}
+        wallet={editingWallet}
+        onClose={() => setWalletModalVisible(false)}
+        onSave={handleSaveWallet}
+        onDelete={handleDeleteWallet}
+      />
+
+      {/* Transactions Creator/Editor Modal */}
+      <TransactionModal
+        visible={txModalVisible}
+        transaction={editingTx}
+        wallets={wallets}
+        onClose={() => setTxModalVisible(false)}
+        onSave={handleSaveTx}
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  headerContainer: {
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+  },
+  filterSection: {
+    gap: 6,
+  },
+  sectionTitle: {
+    fontSize: 10,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginLeft: 2,
+  },
+  filterBar: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  historyHeader: {
+    fontSize: 10,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginLeft: 2,
+    marginTop: 8,
+  },
+  list: {
+    gap: 12,
+    paddingBottom: 88, // Space for FAB
+  },
+  sectionHeader: {
+    paddingHorizontal: 16,
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  itemBox: {
+    marginHorizontal: 16,
+    borderRadius: RADIUS.md,
+    ...SHADOWS.subtle,
+  },
+  fab: {
+    position: 'absolute',
+    right: 20,
+    bottom: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 999,
+    ...SHADOWS.glow,
+  },
+});

@@ -90,7 +90,7 @@ export default function MyPlan({ navigation }) {
               title = 'Fitness';
             } else if (cat === 'mindfulness') {
               icon = 'leaf-outline';
-              catColor = colors.journal;
+              catColor = colors.wallet;
               title = 'Mindfulness';
             }
 

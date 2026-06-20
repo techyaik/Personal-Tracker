@@ -52,8 +52,8 @@ export default function Onboarding({ onGetStarted }) {
       eyebrow: 'Remember what matters',
       title: 'Capture thoughts and moods with context.',
       body: 'Search notes, tag ideas, and keep a mood journal that helps your patterns become clear.',
-      accent: colors.journal,
-      gradient: gradients.journal,
+      accent: colors.notes,
+      gradient: gradients.notes,
       icon: 'book',
       metrics: [
         { value: '😊', label: 'Mood' },

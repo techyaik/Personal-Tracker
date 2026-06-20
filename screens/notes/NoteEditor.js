@@ -47,7 +47,7 @@ export default function NoteEditor({ navigation, route }) {
   };
 
   useEffect(() => {
-    if (!title && !body && !tags.length && !pinned) return;
+    if (!createdRef.current && !title.trim() && !body.trim() && !tags.length && !pinned) return;
     clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => persist(false), 500);
     return () => clearTimeout(timerRef.current);

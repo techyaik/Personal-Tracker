@@ -44,5 +44,5 @@ export const GRADIENTS = {
   health: ['#2E7BBE', COLORS.health],
   habits: ['#7B72DA', COLORS.habits],
   notes: ['#D9902E', COLORS.notes],
-  journal: ['#B24B2B', COLORS.journal],
+  wallet: ['#B24B2B', COLORS.wallet],
 };

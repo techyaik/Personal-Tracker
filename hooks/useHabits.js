@@ -3,17 +3,10 @@ import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 import { addDays, differenceInCalendarDays, format, parseISO, subDays } from 'date-fns';
 import { useStoredList } from './useStoredList';
-import { todayKey } from '../utils/dates';
+import { todayKey, shouldCountForGoal } from '../utils/dates';
 
 const HABITS_KEY = 'habits_list';
 const COMPLETIONS_KEY = 'habits_completions';
-
-const shouldCountForGoal = (dateString, goal) => {
-  const day = parseISO(dateString).getDay();
-  if (goal === 'weekdays') return day >= 1 && day <= 5;
-  if (goal === 'weekends') return day === 0 || day === 6;
-  return true;
-};
 
 export function useHabits() {
   const habitsStore = useStoredList(HABITS_KEY);

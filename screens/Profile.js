@@ -7,7 +7,7 @@ import { Screen } from '../components/Screen';
 import { MetricCard } from '../components/MetricCard';
 import { useHabits } from '../hooks/useHabits';
 import { useHealth } from '../hooks/useHealth';
-import { useJournal } from '../hooks/useJournal';
+import { useWallet } from '../hooks/useWallet';
 import { useNotes } from '../hooks/useNotes';
 import { RADIUS, SHADOWS } from '../constants/theme';
 
@@ -16,13 +16,13 @@ export default function Profile({ navigation }) {
   
   const { habits, completions } = useHabits();
   const { logs } = useHealth();
-  const { entries } = useJournal();
+  const { transactions } = useWallet();
   const { notes } = useNotes();
 
   const totalCompletions = completions.filter((c) => c.done).length;
   const activeHabitsCount = habits.length;
   const healthLogsCount = logs.length;
-  const journalEntriesCount = entries.length;
+  const walletTransactionsCount = transactions.length;
   const notesCount = notes.length;
 
   return (
@@ -73,10 +73,10 @@ export default function Profile({ navigation }) {
             icon={<Ionicons name="heart-outline" size={16} color={colors.health} />}
           />
           <MetricCard
-            value={journalEntriesCount}
-            label="Journal Logged"
-            accent={colors.journal}
-            icon={<Ionicons name="book-outline" size={16} color={colors.journal} />}
+            value={walletTransactionsCount}
+            label="Wallet Transactions"
+            accent={colors.wallet}
+            icon={<Ionicons name="wallet-outline" size={16} color={colors.wallet} />}
           />
         </View>
 

@@ -2,7 +2,7 @@ export const LIGHT_COLORS = {
   health: '#185FA5',
   habits: '#534AB7',
   notes: '#BA7517',
-  journal: '#993C1D',
+  wallet: '#993C1D',
 
   tealDark: '#0F6E56',
   tealLight: '#E1F5EE',
@@ -28,7 +28,7 @@ export const LIGHT_COLORS = {
     health: '#E6F1FB',
     habits: '#EEEDFE',
     notes: '#FAEEDA',
-    journal: '#FAECE7',
+    wallet: '#FAECE7',
   },
 
   pillHealth: { bg: '#E1F5EE', text: '#0F6E56' },
@@ -42,7 +42,7 @@ export const DARK_COLORS = {
   health: '#4F98E2',
   habits: '#7C73E8',
   notes: '#EAB308',
-  journal: '#F97316',
+  wallet: '#F97316',
 
   tealDark: '#2ED4A5',
   tealLight: '#1A2E26',
@@ -68,7 +68,7 @@ export const DARK_COLORS = {
     health: '#1A2E46',
     habits: '#25214D',
     notes: '#3C2E14',
-    journal: '#3E2018',
+    wallet: '#3E2018',
   },
 
   pillHealth: { bg: '#102C24', text: '#2ED4A5' },

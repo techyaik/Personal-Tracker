@@ -13,6 +13,7 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.lifio.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/lifio-icon.png",
         "backgroundColor": "#F5F5F0"
@@ -24,6 +25,12 @@
     },
     "plugins": [
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "4bab509f-2a2c-465b-8f2b-cb92be9d2f34"
+      }
+    },
+    "owner": "aik7"
   }
 }

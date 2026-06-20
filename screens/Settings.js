@@ -127,33 +127,94 @@ async function fillDummyData() {
     },
   ];
 
-  const journalEntries = [
+  const walletAccounts = [
     {
-      id: `${DUMMY_PREFIX}journal_today`,
-      title: 'A productive day',
-      body: 'Finished my habits today and logged health. Feeling positive about the week ahead.',
-      mood: 'happy',
-      date: today,
-      createdAt: isoFor(0),
-      updatedAt: isoFor(0),
+      id: `${DUMMY_PREFIX}ac_main`,
+      name: 'Main Account',
+      initialBalance: 1000.00,
+      color: '#185FA5',
+      icon: 'wallet-outline',
+      createdAt: isoFor(-5),
     },
     {
-      id: `${DUMMY_PREFIX}journal_yesterday`,
-      title: 'Low energy evening',
-      body: 'Skipped gym but took a walk. Feeling okay, need more sleep.',
-      mood: 'neutral',
-      date: yesterday,
-      createdAt: isoFor(-1),
-      updatedAt: isoFor(-1),
+      id: `${DUMMY_PREFIX}ac_savings`,
+      name: 'Savings',
+      initialBalance: 500.00,
+      color: '#534AB7',
+      icon: 'piggy-bank-outline',
+      createdAt: isoFor(-5),
     },
     {
-      id: `${DUMMY_PREFIX}journal_two_days`,
-      title: 'Weekend highlight',
-      body: 'Visited the botanical garden and took lots of photos. Felt refreshed.',
-      mood: 'excited',
-      date: twoDaysAgo,
+      id: `${DUMMY_PREFIX}ac_card`,
+      name: 'Credit Card',
+      initialBalance: 0.00,
+      color: '#993C1D',
+      icon: 'card-outline',
+      createdAt: isoFor(-5),
+    },
+  ];
+
+  const walletEntries = [
+    {
+      id: `${DUMMY_PREFIX}wallet_1`,
+      label: 'Monthly Salary',
+      cat: 'Salary',
+      amount: 4500.00,
+      type: 'in',
+      walletId: `${DUMMY_PREFIX}ac_main`,
+      date: keyFor(-3),
+      paymentMethod: 'Bank Transfer',
+      notes: 'Direct deposit from work.',
+      createdAt: isoFor(-3),
+    },
+    {
+      id: `${DUMMY_PREFIX}wallet_2`,
+      label: 'Organic Grocery Store',
+      cat: 'Food',
+      amount: 142.50,
+      type: 'out',
+      walletId: `${DUMMY_PREFIX}ac_main`,
+      date: keyFor(-2),
+      paymentMethod: 'Debit Card',
+      notes: '',
       createdAt: isoFor(-2),
-      updatedAt: isoFor(-2),
+    },
+    {
+      id: `${DUMMY_PREFIX}wallet_3`,
+      label: 'Gas Station Fuel',
+      cat: 'Transport',
+      amount: 45.00,
+      type: 'out',
+      walletId: `${DUMMY_PREFIX}ac_card`,
+      date: keyFor(-1),
+      paymentMethod: 'Credit Card',
+      notes: '',
+      createdAt: isoFor(-1),
+    },
+    {
+      id: `${DUMMY_PREFIX}wallet_4`,
+      label: 'Savings Transfer',
+      cat: 'Transfer',
+      amount: 300.00,
+      type: 'transfer',
+      fromWalletId: `${DUMMY_PREFIX}ac_main`,
+      toWalletId: `${DUMMY_PREFIX}ac_savings`,
+      date: keyFor(-1),
+      paymentMethod: 'Bank Transfer',
+      notes: 'Auto savings transfer.',
+      createdAt: isoFor(-1),
+    },
+    {
+      id: `${DUMMY_PREFIX}wallet_5`,
+      label: 'Movie Tickets & Dinner',
+      cat: 'Fun',
+      amount: 65.00,
+      type: 'out',
+      walletId: `${DUMMY_PREFIX}ac_card`,
+      date: keyFor(0),
+      paymentMethod: 'Credit Card',
+      notes: 'Weekend night out.',
+      createdAt: isoFor(0),
     },
   ];
 
@@ -164,14 +225,16 @@ async function fillDummyData() {
     (item) => item && !String(item.habitId || '').startsWith(DUMMY_PREFIX)
   );
   const existingNotes = removeDummyItems(await getData('notes_list'));
-  const existingJournal = removeDummyItems(await getData('journal_entries'));
+  const existingWallet = removeDummyItems(await getData('wallet_entries'));
+  const existingAccounts = removeDummyItems(await getData('wallet_accounts'));
 
   await Promise.all([
     setData('health_logs', [...existingHealth, ...healthLogs]),
     setData('habits_list', [...existingHabits, ...habits]),
     setData('habits_completions', [...existingCompletions, ...completions]),
     setData('notes_list', [...existingNotes, ...notes]),
-    setData('journal_entries', [...existingJournal, ...journalEntries]),
+    setData('wallet_entries', [...existingWallet, ...walletEntries]),
+    setData('wallet_accounts', [...existingAccounts, ...walletAccounts]),
   ]);
 }
 
@@ -183,14 +246,16 @@ async function eraseDummyData() {
     (item) => item && !String(item.habitId || '').startsWith(DUMMY_PREFIX)
   );
   const existingNotes = removeDummyItems(await getData('notes_list'));
-  const existingJournal = removeDummyItems(await getData('journal_entries'));
+  const existingWallet = removeDummyItems(await getData('wallet_entries'));
+  const existingAccounts = removeDummyItems(await getData('wallet_accounts'));
 
   await Promise.all([
     setData('health_logs', existingHealth),
     setData('habits_list', existingHabits),
     setData('habits_completions', existingCompletions),
     setData('notes_list', existingNotes),
-    setData('journal_entries', existingJournal),
+    setData('wallet_entries', existingWallet),
+    setData('wallet_accounts', existingAccounts),
   ]);
 }
 
@@ -207,7 +272,7 @@ export default function Settings() {
   const [healthKitPerm, setHealthKitPerm] = useState(true);
 
   const confirmFill = () => {
-    const message = 'This will populate habits, health logs, journal entries, and notes with realistic dummy records. Existing dummy data will be updated.';
+    const message = 'This will populate habits, health logs, wallet transactions, and notes with realistic dummy records. Existing dummy data will be updated.';
     const runFill = async () => {
       try {
         console.log('[Settings] Inputting dummy data...');
@@ -330,7 +395,7 @@ export default function Settings() {
         <SectionHeader>Appearance</SectionHeader>
         <View style={[styles.card, { backgroundColor: colors.white, borderColor: colors.borderLight }]}>
           <Text style={[styles.cardDesc, { color: colors.textSecondary }]}>
-            Choose how Personal Tracker looks on your device.
+            Choose how Lifio looks on your device.
           </Text>
           <View style={styles.themeSelectorRow}>
             {['light', 'dark', 'system'].map((mode) => {
@@ -450,7 +515,7 @@ export default function Settings() {
           <View style={styles.optionRow}>
             <View style={styles.optionInfo}>
               <Text style={[styles.optionTitle, { color: colors.textPrimary }]}>Location Services</Text>
-              <Text style={[styles.optionDesc, { color: colors.textSecondary }]}>Add location tag to journal logs</Text>
+              <Text style={[styles.optionDesc, { color: colors.textSecondary }]}>Add location tags to local tracker logs</Text>
             </View>
             <Switch
               value={locationPerm}
@@ -532,7 +597,7 @@ export default function Settings() {
           </View>
           <View style={styles.titleColumn}>
             <Text style={[styles.title, { color: colors.textPrimary }]}>Lifio Tracker</Text>
-            <Text style={[styles.cardDesc, { color: colors.textSecondary }]}>A personal journal and companion for mindful momentum.</Text>
+            <Text style={[styles.cardDesc, { color: colors.textSecondary }]}>A personal ledger, health, and habits tracker for mindful momentum.</Text>
           </View>
         </View>
         <Text style={[styles.versionText, { color: colors.textHint }]}>Version 1.0.0 (Production Build)</Text>

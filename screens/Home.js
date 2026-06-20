@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
@@ -6,10 +6,11 @@ import { AppHeader } from '../components/AppHeader';
 import { Screen } from '../components/Screen';
 import { useHabits } from '../hooks/useHabits';
 import { useHealth } from '../hooks/useHealth';
-import { useJournal } from '../hooks/useJournal';
+import { useWallet } from '../hooks/useWallet';
+import { getData, setData } from '../storage/storage';
 import { useNotes } from '../hooks/useNotes';
 import { MOODS } from '../constants/categories';
-import { displayDate, todayKey } from '../utils/dates';
+import { displayDate, todayKey, shouldCountForGoal } from '../utils/dates';
 import { RADIUS, SHADOWS } from '../constants/theme';
 import { showToast } from '../utils/feedback';
 
@@ -18,12 +19,22 @@ export default function Home({ navigation }) {
 
   const { habits, completions, getDayCompletionPercent, getStreak, toggleCompletion, isDone } = useHabits();
   const { logs, getTodayLog } = useHealth();
-  const { entries, addEntry, getMoodForDate } = useJournal();
+  const { wallets, transactions } = useWallet();
   const { notes } = useNotes();
 
+  const [todayMood, setTodayMood] = React.useState(null);
+
+  React.useEffect(() => {
+    const loadMood = async () => {
+      const moods = await getData('mood_logs');
+      const todayEntry = moods.find((m) => m.date === todayKey());
+      if (todayEntry) setTodayMood(todayEntry.mood);
+    };
+    loadMood();
+  }, []);
+
   const today = getTodayLog();
-  const todayMood = getMoodForDate(todayKey());
-  const activeHabits = habits;
+  const activeHabits = habits.filter((h) => shouldCountForGoal(todayKey(), h.goal));
   const completedHabitsCount = activeHabits.filter((h) => isDone(h.id, todayKey())).length;
   
   // Calculate best streak across habits
@@ -31,21 +42,26 @@ export default function Home({ navigation }) {
   const habitsCompletionPercent = getDayCompletionPercent(todayKey());
 
   const currentNote = notes[0];
-  const lastEntry = entries[0];
+
+  // Calculate wallet running balance
+  const balance = useMemo(() => {
+    return wallets.reduce((sum, w) => sum + (w.balance ?? 0), 0);
+  }, [wallets]);
+
+  const fmt = (n) => {
+    return '$' + Number(n).toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  };
 
   const handleQuickMood = async (moodKey) => {
-    const selectedMood = MOODS.find((m) => m.key === moodKey);
-    const newEntry = {
-      id: 'journal_' + Date.now().toString(),
-      title: 'Daily Mood Log',
-      body: `I logged my mood as ${selectedMood?.label} ${selectedMood?.emoji} from the Home dashboard.`,
-      mood: moodKey,
-      date: todayKey(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
     try {
-      await addEntry(newEntry);
+      const moods = await getData('mood_logs');
+      const filtered = moods.filter((m) => m.date !== todayKey());
+      const newMoods = [...filtered, { date: todayKey(), mood: moodKey }];
+      await setData('mood_logs', newMoods);
+      setTodayMood(moodKey);
       showToast('Mood logged successfully!');
     } catch (e) {
       console.log('Error logging quick mood:', e);
@@ -167,7 +183,7 @@ export default function Home({ navigation }) {
         </View>
       </View>
 
-      {/* Third Bento Grid Row: Recent Note & Recent Journal */}
+      {/* Third Bento Grid Row: Recent Note & Wallet Balance */}
       <View style={styles.gridRow}>
         {/* Note Card */}
         <View style={[styles.bentoCard, { backgroundColor: colors.white, borderColor: colors.borderLight }]}>
@@ -191,26 +207,22 @@ export default function Home({ navigation }) {
           )}
         </View>
 
-        {/* Journal Card */}
+        {/* Wallet Card */}
         <View style={[styles.bentoCard, { backgroundColor: colors.white, borderColor: colors.borderLight }]}>
           <View style={styles.rowBetween}>
-            <Text style={[styles.cardTitle, { color: colors.textSecondary }]}>Recent Journal</Text>
+            <Text style={[styles.cardTitle, { color: colors.textSecondary }]}>Wallet Balance</Text>
             <Pressable onPress={() => navigation.navigate('JournalTab')}>
-              <Ionicons name="arrow-forward" size={14} color={colors.journal} />
+              <Ionicons name="arrow-forward" size={14} color={colors.wallet} />
             </Pressable>
           </View>
-          {lastEntry ? (
-            <View style={styles.previewInfo}>
-              <Text style={[styles.previewTitle, { color: colors.textPrimary }]} numberOfLines={1}>
-                {lastEntry.title || 'Untitled entry'}
-              </Text>
-              <Text style={[styles.previewBody, { color: colors.textSecondary }]} numberOfLines={2}>
-                {lastEntry.body || 'Empty entry'}
-              </Text>
-            </View>
-          ) : (
-            <Text style={[styles.emptyPreview, { color: colors.textHint }]}>No journal entries yet.</Text>
-          )}
+          <View style={styles.previewInfo}>
+            <Text selectable style={[styles.previewTitle, { color: colors.textPrimary, fontSize: 20, fontWeight: '700' }]}>
+              {fmt(balance)}
+            </Text>
+            <Text style={[styles.previewBody, { color: colors.textSecondary, marginTop: 2 }]} numberOfLines={1}>
+              {transactions.length ? `${transactions.length} transactions logged` : 'No transactions logged'}
+            </Text>
+          </View>
         </View>
       </View>
 
@@ -243,11 +255,11 @@ export default function Home({ navigation }) {
           </Pressable>
 
           <Pressable
-            onPress={() => navigation.navigate('JournalTab', { screen: 'JournalNewEntry' })}
+            onPress={() => navigation.navigate('JournalTab')}
             style={[styles.shortcutCard, { backgroundColor: colors.white, borderColor: colors.borderLight }]}
           >
-            <Ionicons name="book" size={18} color={colors.journal} />
-            <Text style={[styles.shortcutLabel, { color: colors.textPrimary }]}>Write Journal</Text>
+            <Ionicons name="wallet" size={18} color={colors.wallet} />
+            <Text style={[styles.shortcutLabel, { color: colors.textPrimary }]}>Wallet Ledger</Text>
           </Pressable>
         </View>
       </View>

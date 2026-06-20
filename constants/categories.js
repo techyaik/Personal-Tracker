@@ -12,7 +12,7 @@ export const MOODS = [
   { key: 'happy', emoji: '😊', label: 'Happy', color: COLORS.health },
   { key: 'neutral', emoji: '😐', label: 'Neutral', color: COLORS.textSecondary },
   { key: 'sad', emoji: '😔', label: 'Sad', color: COLORS.habits },
-  { key: 'stressed', emoji: '😤', label: 'Stressed', color: COLORS.journal },
+  { key: 'stressed', emoji: '😤', label: 'Stressed', color: COLORS.wallet },
   { key: 'excited', emoji: '🤩', label: 'Excited', color: COLORS.notes },
 ];
 

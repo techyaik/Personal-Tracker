@@ -12,7 +12,7 @@ export function PrimaryButton({ title, onPress, color, disabled = false, icon })
   const gradientForColor = () => {
     if (activeColor === colors.habits) return gradients.habits;
     if (activeColor === colors.notes) return gradients.notes;
-    if (activeColor === colors.journal) return gradients.journal;
+    if (activeColor === colors.wallet) return gradients.wallet;
     if (activeColor === colors.danger) return [colors.theme === 'dark' ? '#5E2B2B' : '#D95D35', colors.danger];
     return gradients.health;
   };

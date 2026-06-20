@@ -9,14 +9,15 @@ import { Screen } from '../../components/Screen';
 import { SectionHeader } from '../../components/SectionHeader';
 import { FAB } from '../../components/FAB';
 import { useHabits } from '../../hooks/useHabits';
-import { displayDate, todayKey } from '../../utils/dates';
+import { displayDate, todayKey, shouldCountForGoal } from '../../utils/dates';
 import { RADIUS, SHADOWS } from '../../constants/theme';
 
 export default function HabitsToday({ navigation }) {
   const { habits, loading, isDone, toggleCompletion, getStreak, getWeekPercents, deleteHabit } = useHabits();
   const { colors } = useTheme();
   
-  const doneCount = habits.filter((habit) => isDone(habit.id)).length;
+  const activeHabits = habits.filter((h) => shouldCountForGoal(todayKey(), h.goal));
+  const doneCount = activeHabits.filter((habit) => isDone(habit.id)).length;
   const week = getWeekPercents();
 
   const quickOptions = (habit) =>
@@ -31,9 +32,9 @@ export default function HabitsToday({ navigation }) {
       <Screen loading={loading}>
         <AppHeader title="Habits" />
         <View style={styles.section}>
-          <SectionHeader>Today — {doneCount} of {habits.length} done</SectionHeader>
-          {habits.length ? (
-            habits.map((habit) => {
+          <SectionHeader>Today — {doneCount} of {activeHabits.length} done</SectionHeader>
+          {activeHabits.length ? (
+            activeHabits.map((habit) => {
               const category = CATEGORIES.find((item) => item.key === habit.category) || CATEGORIES[CATEGORIES.length - 1];
               return (
                 <HabitRow
@@ -51,7 +52,7 @@ export default function HabitsToday({ navigation }) {
           ) : (
             <EmptyState
               icon="checkmark-circle-outline"
-              message="No habits yet. Build your first one."
+              message={habits.length ? "No habits scheduled for today." : "No habits yet. Build your first one."}
               actionLabel="+ Add habit"
               action={() => navigation.navigate('AddHabit')}
               accent={colors.habits}

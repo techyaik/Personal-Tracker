@@ -14,7 +14,7 @@ export const resolveColor = (colorStr, colors) => {
     case '#185fa5': return colors.health;
     case '#534ab7': return colors.habits;
     case '#ba7517': return colors.notes;
-    case '#993c1d': return colors.journal;
+    case '#993c1d': return colors.wallet;
     case '#0f6e56': return colors.tealDark;
     case '#e1f5ee': return colors.tealLight;
     case '#1d9e75': return colors.tealMid;
@@ -33,7 +33,7 @@ export const resolveColor = (colorStr, colors) => {
       if (colorStr === '#E6F1FB') return colors.accentLight.health;
       if (colorStr === '#EEEDFE') return colors.accentLight.habits;
       if (colorStr === '#FAEEDA') return colors.accentLight.notes;
-      if (colorStr === '#FAECE7') return colors.accentLight.journal;
+      if (colorStr === '#FAECE7') return colors.accentLight.wallet;
       return colorStr;
   }
 };
@@ -82,7 +82,7 @@ export function ThemeProvider({ children }) {
     health: [theme === 'dark' ? '#1A3C60' : '#2E7BBE', colors.health],
     habits: [theme === 'dark' ? '#2B235E' : '#7B72DA', colors.habits],
     notes: [theme === 'dark' ? '#4A3212' : '#D9902E', colors.notes],
-    journal: [theme === 'dark' ? '#4D2418' : '#B24B2B', colors.journal],
+    wallet: [theme === 'dark' ? '#4D2418' : '#B24B2B', colors.wallet],
   };
 
   const contextValue = {

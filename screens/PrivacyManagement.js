@@ -23,7 +23,9 @@ export default function PrivacyManagement({ navigation }) {
       const habits = await getData('habits_list');
       const completions = await getData('habits_completions');
       const notes = await getData('notes_list');
-      const journal = await getData('journal_entries');
+      const wallet = await getData('wallet_entries');
+      const walletAccounts = await getData('wallet_accounts');
+      const moodLogs = await getData('mood_logs');
 
       const allData = {
         exportedAt: new Date().toISOString(),
@@ -31,12 +33,14 @@ export default function PrivacyManagement({ navigation }) {
         habits,
         completions,
         notes,
-        journal,
+        wallet,
+        walletAccounts,
+        moodLogs,
       };
 
       await Share.share({
         message: JSON.stringify(allData, null, 2),
-        title: 'Personal Tracker Data Export',
+        title: 'Lifio Data Export',
       });
     } catch (e) {
       Alert.alert('Export Failed', e.message);
@@ -46,7 +50,12 @@ export default function PrivacyManagement({ navigation }) {
   const clearSection = (key, label) => {
     const message = `This will permanently erase all data in the ${label} section. This action cannot be undone.`;
     const runClear = async () => {
-      await setData(key, []);
+      if (key === 'wallet_entries') {
+        await setData('wallet_entries', []);
+        await setData('wallet_accounts', []);
+      } else {
+        await setData(key, []);
+      }
       clearMemoryCache();
       triggerDataRefresh();
       showToast(`${label} cleared ✓`);
@@ -159,7 +168,7 @@ export default function PrivacyManagement({ navigation }) {
             <Text style={[styles.actionLabel, { color: colors.textPrimary, marginBottom: 8 }]}>Danger Zone</Text>
             <View style={styles.grid}>
               <PrimaryButton title="Clear Habits" onPress={() => clearSection('habits_list', 'Habits')} color={colors.danger} />
-              <PrimaryButton title="Clear Journal" onPress={() => clearSection('journal_entries', 'Journal')} color={colors.danger} />
+              <PrimaryButton title="Clear Wallet" onPress={() => clearSection('wallet_entries', 'Wallet')} color={colors.danger} />
             </View>
             <View style={[styles.grid, { marginTop: 8 }]}>
               <PrimaryButton title="Clear Health" onPress={() => clearSection('health_logs', 'Health')} color={colors.danger} />

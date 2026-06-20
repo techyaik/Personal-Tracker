@@ -10,7 +10,7 @@ import { RADIUS, SHADOWS } from '../constants/theme';
 import { HealthStack } from './HealthStack';
 import { HabitsStack } from './HabitsStack';
 import { NotesStack } from './NotesStack';
-import { JournalStack } from './JournalStack';
+import { WalletStack } from './WalletStack';
 import Onboarding from '../screens/Onboarding';
 import Settings from '../screens/Settings';
 import Home from '../screens/Home';
@@ -30,7 +30,7 @@ const TAB_META = {
   HabitsTab: { label: 'Habits', icon: 'checkmark-circle-outline', activeIcon: 'checkmark-circle', color: 'habits' },
   HomeTab: { label: 'Home', icon: 'home-outline', activeIcon: 'home', color: 'health' },
   NotesTab: { label: 'Notes', icon: 'document-text-outline', activeIcon: 'document-text', color: 'notes' },
-  JournalTab: { label: 'Journal', icon: 'book-outline', activeIcon: 'book', color: 'journal' },
+  JournalTab: { label: 'Wallet', icon: 'wallet-outline', activeIcon: 'wallet', color: 'wallet' },
 };
 
 function MainTabs() {
@@ -61,7 +61,7 @@ function MainTabs() {
       <Tab.Screen name="HabitsTab" component={HabitsStack} />
       <Tab.Screen name="HomeTab" component={Home} />
       <Tab.Screen name="NotesTab" component={NotesStack} />
-      <Tab.Screen name="JournalTab" component={JournalStack} />
+      <Tab.Screen name="JournalTab" component={WalletStack} />
     </Tab.Navigator>
   );
 }
@@ -76,7 +76,7 @@ function CustomDrawerContent(props) {
   const handleShare = async () => {
     try {
       await Share.share({
-        message: 'Personal Tracker - A bento-style companion for mindful habits, health logging, and journal entries. Download it today!',
+        message: 'Lifio - A bento-style companion for mindful habits, health logging, and wallet tracking. Download it today!',
       });
     } catch (error) {
       console.log('Share error:', error);
@@ -97,7 +97,7 @@ function CustomDrawerContent(props) {
       {/* Drawer Header */}
       <View style={[styles.drawerHeader, { borderBottomColor: colors.borderLight }]}>
         <Image source={LOGO} style={styles.drawerLogo} />
-        <Text style={[styles.appName, { color: colors.textPrimary }]}>Personal Tracker</Text>
+        <Text style={[styles.appName, { color: colors.textPrimary }]}>Lifio</Text>
         <Text style={[styles.appSubtitle, { color: colors.textSecondary }]}>Mindful Momentum</Text>
       </View>
 

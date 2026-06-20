@@ -17,8 +17,8 @@ export function MetricCard({ value, label, accent, icon, style }) {
     bgTint = colors.accentLight.habits;
   } else if (activeAccent === colors.notes) {
     bgTint = colors.accentLight.notes;
-  } else if (activeAccent === colors.journal) {
-    bgTint = colors.accentLight.journal;
+  } else if (activeAccent === colors.wallet) {
+    bgTint = colors.accentLight.wallet;
   }
 
   return (

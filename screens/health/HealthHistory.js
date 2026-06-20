@@ -10,6 +10,8 @@ import { Screen } from '../../components/Screen';
 import { useHealth } from '../../hooks/useHealth';
 import { displayDate } from '../../utils/dates';
 
+const formatSteps = (steps) => (steps || steps === 0 ? Number(steps).toLocaleString() : '—');
+
 export default function HealthHistory({ navigation }) {
   const { logs, loading } = useHealth();
   const { colors } = useTheme();
@@ -36,7 +38,7 @@ export default function HealthHistory({ navigation }) {
           <ListRow
             key={log.id}
             title={displayDate(log.date)}
-            subtitle={`${log.weight || '—'} kg · ${log.sleep || '—'} hrs · ${log.steps?.toLocaleString?.() || '—'} steps`}
+            subtitle={`${log.weight || '—'} kg · ${log.sleep || '—'} hrs · ${formatSteps(log.steps)} steps`}
             onPress={() => navigation.navigate('HealthDayDetail', { entryId: log.id })}
           />
         ))

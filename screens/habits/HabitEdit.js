@@ -26,7 +26,15 @@ export default function HabitEdit({ navigation, route }) {
       Alert.alert('Name required', 'Give this habit a name before saving.');
       return;
     }
-    await updateHabit(habit.id, { name: name.trim(), category, reminderTime: reminderTime.trim() || null, goal });
+    const trimmedTime = reminderTime.trim();
+    if (trimmedTime) {
+      const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+      if (!timeRegex.test(trimmedTime)) {
+        Alert.alert('Invalid time format', 'Please enter reminder time in HH:MM format (24-hour, e.g. 07:30 or 18:45).');
+        return;
+      }
+    }
+    await updateHabit(habit.id, { name: name.trim(), category, reminderTime: trimmedTime || null, goal });
     navigation.navigate('HabitsToday');
   };
 
