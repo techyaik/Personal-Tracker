@@ -5,15 +5,19 @@ import { useTheme } from '../theme/ThemeContext';
 import { RADIUS, SHADOWS } from '../constants/theme';
 
 export function PrimaryButton({ title, onPress, color, disabled = false, icon }) {
-  const { colors, gradients, resolveThemeColor } = useTheme();
+  const { colors, gradients, resolveThemeColor, theme } = useTheme();
 
   const activeColor = color ? resolveThemeColor(color) : colors.health;
+  const buttonTextColor = colors.onAccent || '#FFFFFF';
+  const buttonIcon = React.isValidElement(icon)
+    ? React.cloneElement(icon, { color: buttonTextColor })
+    : icon;
 
   const gradientForColor = () => {
     if (activeColor === colors.habits) return gradients.habits;
     if (activeColor === colors.notes) return gradients.notes;
     if (activeColor === colors.wallet) return gradients.wallet;
-    if (activeColor === colors.danger) return [colors.theme === 'dark' ? '#5E2B2B' : '#D95D35', colors.danger];
+    if (activeColor === colors.danger) return [theme === 'dark' ? '#7A3D39' : '#D95D35', colors.danger];
     return gradients.health;
   };
 
@@ -33,8 +37,8 @@ export function PrimaryButton({ title, onPress, color, disabled = false, icon })
         end={{ x: 1, y: 1 }}
         style={styles.gradient}
       >
-        {icon}
-        <Text style={[styles.text, { color: colors.white }]}>{title}</Text>
+        {buttonIcon}
+        <Text style={[styles.text, { color: buttonTextColor }]}>{title}</Text>
       </LinearGradient>
     </Pressable>
   );

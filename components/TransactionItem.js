@@ -101,7 +101,10 @@ export function TransactionItem({ transaction, onDelete, onPress, formatMoney })
       </Text>
 
       <Pressable
-        onPress={onDelete}
+        onPress={(event) => {
+          event?.stopPropagation?.();
+          onDelete?.();
+        }}
         hitSlop={8}
         style={({ pressed }) => [
           styles.deleteBtn,

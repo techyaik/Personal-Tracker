@@ -154,6 +154,13 @@ export function useWallet() {
   };
 
   const deleteTransaction = async (id) => {
+    if (!id) {
+      throw new Error('Missing transaction id');
+    }
+    const exists = txItems.some(tx => tx.id === id);
+    if (!exists) {
+      throw new Error('Transaction not found');
+    }
     await saveTransactions(txItems.filter(tx => tx.id !== id));
   };
 

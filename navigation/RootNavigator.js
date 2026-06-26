@@ -35,6 +35,14 @@ const TAB_META = {
 
 function MainTabs() {
   const { colors, resolveThemeColor } = useTheme();
+  const themedTabBarStyle = [
+    styles.tabBar,
+    {
+      backgroundColor: colors.surfaceElevated,
+      borderTopColor: colors.borderLight,
+      shadowColor: colors.overlay,
+    },
+  ];
 
   return (
     <Tab.Navigator
@@ -46,7 +54,7 @@ function MainTabs() {
           headerShown: false,
           tabBarActiveTintColor: tabColor,
           tabBarInactiveTintColor: colors.textHint,
-          tabBarStyle: styles.tabBar,
+          tabBarStyle: themedTabBarStyle,
           tabBarLabel: meta?.label || '',
           tabBarLabelStyle: styles.tabLabel,
           tabBarItemStyle: styles.tabItem,
@@ -180,7 +188,7 @@ function NavigatorContent() {
           drawerContent={(props) => <CustomDrawerContent {...props} />}
           screenOptions={{
             headerShown: false,
-            drawerStyle: styles.drawer,
+            drawerStyle: [styles.drawer, { backgroundColor: colors.bgWarm }],
           }}
         >
           <Drawer.Screen name="Main" component={MainTabs} />
@@ -208,8 +216,6 @@ export default function RootNavigator() {
 
 const styles = StyleSheet.create({
   tabBar: {
-    backgroundColor: '#FFFFFF',
-    borderTopColor: '#F0F0F0',
     borderTopWidth: 1,
     height: 76,
     paddingBottom: 12,

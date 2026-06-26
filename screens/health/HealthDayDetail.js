@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Alert, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { BarChart } from 'react-native-chart-kit';
 import { Ionicons } from '@expo/vector-icons';
+import { addDays, differenceInCalendarDays, parseISO } from 'date-fns';
 import { useTheme } from '../../theme/ThemeContext';
 import { AppHeader } from '../../components/AppHeader';
 import { MetricCard } from '../../components/MetricCard';
@@ -18,6 +19,20 @@ export default function HealthDayDetail({ navigation, route }) {
   const { colors } = useTheme();
   
   const entry = logs.find((log) => log.id === route.params?.entryId) || route.params?.entry;
+  const cycleInfo = useMemo(() => {
+    if (!entry || !(entry.cycleEnabled || entry.period || entry.lastPeriodStart)) return null;
+    const startDate = entry.lastPeriodStart || entry.date;
+    try {
+      const next = addDays(parseISO(startDate), Number(entry.cycleLength) || 28);
+      const daysUntil = differenceInCalendarDays(next, parseISO(entry.date));
+      return {
+        expected: displayDate(next, 'MMM d, yyyy'),
+        daysUntil,
+      };
+    } catch (e) {
+      return null;
+    }
+  }, [entry]);
 
   if (!entry) {
     return (
@@ -80,7 +95,52 @@ export default function HealthDayDetail({ navigation, route }) {
       {entry.period ? (
         <View style={[styles.periodBanner, { backgroundColor: colors.accentLight.health, borderColor: colors.health }]}>
           <Ionicons name="water" size={18} color={colors.health} />
-          <Text style={[styles.periodBannerText, { color: colors.health }]}>Period started on this day</Text>
+          <Text style={[styles.periodBannerText, { color: colors.health }]}>
+            Period started on this day{entry.flowIntensity ? ` · ${entry.flowIntensity} flow` : ''}
+          </Text>
+        </View>
+      ) : null}
+      <View style={styles.section}>
+        <SectionHeader>Wellbeing</SectionHeader>
+        <View style={styles.grid}>
+          <MetricCard
+            value={entry.mood || '—'}
+            label="Mood"
+            accent={colors.health}
+            icon={<Ionicons name="happy-outline" size={16} color={colors.health} />}
+          />
+          <MetricCard
+            value={entry.energy || '—'}
+            label="Energy"
+            accent={colors.health}
+            icon={<Ionicons name="flash-outline" size={16} color={colors.health} />}
+          />
+        </View>
+        <View style={[styles.infoCard, { backgroundColor: colors.white, borderColor: colors.borderLight }]}>
+          <Text style={[styles.infoTitle, { color: colors.textPrimary }]}>Symptoms</Text>
+          <Text style={[styles.infoText, { color: colors.textSecondary }]}>
+            {entry.symptoms?.length ? entry.symptoms.join(', ') : 'No symptoms logged.'}
+          </Text>
+        </View>
+        <View style={[styles.infoCard, { backgroundColor: colors.white, borderColor: colors.borderLight }]}>
+          <Text style={[styles.infoTitle, { color: colors.textPrimary }]}>Medication or supplements</Text>
+          <Text style={[styles.infoText, { color: colors.textSecondary }]}>
+            {entry.medication || 'No reminder logged.'}
+          </Text>
+        </View>
+      </View>
+      {cycleInfo ? (
+        <View style={styles.section}>
+          <SectionHeader>Cycle reminder</SectionHeader>
+          <View style={[styles.infoCard, { backgroundColor: colors.white, borderColor: colors.borderLight }]}>
+            <Text style={[styles.infoTitle, { color: colors.textPrimary }]}>Next expected period</Text>
+            <Text style={[styles.infoText, { color: colors.textSecondary }]}>
+              {cycleInfo.expected} · {cycleInfo.daysUntil < 0 ? `${Math.abs(cycleInfo.daysUntil)} days overdue from this log` : `${cycleInfo.daysUntil} days from this log`}
+            </Text>
+            <Text style={[styles.infoText, { color: colors.textSecondary }]}>
+              Symptoms: {entry.cycleSymptoms?.length ? entry.cycleSymptoms.join(', ') : 'None logged'}
+            </Text>
+          </View>
         </View>
       ) : null}
       <View style={styles.section}>
@@ -126,6 +186,21 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     padding: 14,
     ...SHADOWS.subtle,
+  },
+  infoCard: {
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    gap: 4,
+    padding: 14,
+    ...SHADOWS.subtle,
+  },
+  infoTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  infoText: {
+    fontSize: 13,
+    lineHeight: 19,
   },
   periodBanner: {
     flexDirection: 'row',

@@ -79,10 +79,10 @@ export function ThemeProvider({ children }) {
 
   const gradients = {
     page: [colors.bgWarm, colors.bg],
-    health: [theme === 'dark' ? '#1A3C60' : '#2E7BBE', colors.health],
-    habits: [theme === 'dark' ? '#2B235E' : '#7B72DA', colors.habits],
-    notes: [theme === 'dark' ? '#4A3212' : '#D9902E', colors.notes],
-    wallet: [theme === 'dark' ? '#4D2418' : '#B24B2B', colors.wallet],
+    health: [theme === 'dark' ? '#385F7E' : '#2E7BBE', colors.health],
+    habits: [theme === 'dark' ? '#514A7E' : '#7B72DA', colors.habits],
+    notes: [theme === 'dark' ? '#72583B' : '#D9902E', colors.notes],
+    wallet: [theme === 'dark' ? '#714332' : '#B24B2B', colors.wallet],
   };
 
   const contextValue = {

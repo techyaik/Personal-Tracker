@@ -11,6 +11,13 @@ import { useHealth } from '../../hooks/useHealth';
 import { displayDate } from '../../utils/dates';
 
 const formatSteps = (steps) => (steps || steps === 0 ? Number(steps).toLocaleString() : '—');
+const historySummary = (log) => {
+  const parts = [`${log.weight || '—'} kg`, `${log.sleep || '—'} hrs`, `${formatSteps(log.steps)} steps`];
+  if (log.mood) parts.push(log.mood);
+  if (log.symptoms?.length) parts.push(`${log.symptoms.length} symptom${log.symptoms.length === 1 ? '' : 's'}`);
+  if (log.period) parts.push('Period');
+  return parts.join(' · ');
+};
 
 export default function HealthHistory({ navigation }) {
   const { logs, loading } = useHealth();
@@ -38,7 +45,7 @@ export default function HealthHistory({ navigation }) {
           <ListRow
             key={log.id}
             title={displayDate(log.date)}
-            subtitle={`${log.weight || '—'} kg · ${log.sleep || '—'} hrs · ${formatSteps(log.steps)} steps`}
+            subtitle={historySummary(log)}
             onPress={() => navigation.navigate('HealthDayDetail', { entryId: log.id })}
           />
         ))

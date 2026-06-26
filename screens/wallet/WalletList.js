@@ -14,7 +14,7 @@ import { WalletAccountList } from '../../components/WalletAccountList';
 import { WalletModal } from '../../components/WalletModal';
 import { TransactionModal } from '../../components/TransactionModal';
 import { useWallet } from '../../hooks/useWallet';
-import { todayKey } from '../../utils/dates';
+import { showToast } from '../../utils/feedback';
 import { RADIUS, SHADOWS } from '../../constants/theme';
 
 const EXPENSE_CATEGORIES = ['Food', 'Transport', 'Bills', 'Fun', 'Shopping', 'Health', 'Travel', 'Other'];
@@ -40,6 +40,7 @@ export default function WalletList({ navigation }) {
     addTransaction,
     editTransaction,
     deleteTransaction,
+    refresh,
     currency,
     currencies,
     setCurrency,
@@ -253,6 +254,11 @@ export default function WalletList({ navigation }) {
   };
 
   const handleDeleteTxClick = (tx) => {
+    if (!tx?.id) {
+      Alert.alert('Could not delete transaction', 'This transaction is missing its saved ID.');
+      return;
+    }
+
     Alert.alert(
       'Delete Transaction?',
       `Delete "${tx.label}" for ${formatMoney(tx.amount)}? This action cannot be undone.`,
@@ -262,8 +268,15 @@ export default function WalletList({ navigation }) {
           text: 'Delete',
           style: 'destructive',
           onPress: async () => {
-            await deleteTransaction(tx.id);
-            Alert.alert('Transaction deleted ✓');
+            try {
+              await deleteTransaction(tx.id);
+              await refresh();
+              setEditingTx((current) => (current?.id === tx.id ? null : current));
+              showToast('Transaction deleted ✓');
+            } catch (error) {
+              console.error('Error deleting transaction:', error);
+              Alert.alert('Could not delete transaction', 'The transaction was not removed. Please try again.');
+            }
           },
         },
       ]

@@ -7,7 +7,6 @@ import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../theme/ThemeContext';
 import { RADIUS, SHADOWS } from '../constants/theme';
 import { AppHeader } from '../components/AppHeader';
-import { PrimaryButton } from '../components/PrimaryButton';
 import { Screen } from '../components/Screen';
 import { SectionHeader } from '../components/SectionHeader';
 import { InputField } from '../components/InputField';
@@ -484,34 +483,6 @@ export default function Settings() {
     }
   };
 
-  const handleBackup = () => {
-    showToast('Database backup created ✓');
-  };
-
-  const handleRestore = () => {
-    const message = 'This will overwrite current logs with the latest backup state. Proceed?';
-    if (Platform.OS === 'web') {
-      const confirm = window.confirm(`Restore Database?\n\n${message}`);
-      if (confirm) {
-        showToast('Database restored successfully ✓');
-      }
-    } else {
-      Alert.alert(
-        'Restore Database?',
-        message,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Restore',
-            onPress: () => {
-              showToast('Database restored successfully ✓');
-            },
-          },
-        ]
-      );
-    }
-  };
-
   return (
     <Screen>
       <AppHeader
@@ -728,21 +699,7 @@ export default function Settings() {
         </View>
       ) : null}
 
-      {/* 6. Backup and Restore */}
-      <View style={styles.section}>
-        <SectionHeader>Backup & Restore</SectionHeader>
-        <View style={[styles.card, { backgroundColor: colors.white, borderColor: colors.borderLight }]}>
-          <Text style={[styles.cardDesc, { color: colors.textSecondary }]}>
-            Manually export or import local storage snapshots.
-          </Text>
-          <View style={styles.grid}>
-            <PrimaryButton title="Backup database" onPress={handleBackup} color={colors.health} />
-            <PrimaryButton title="Restore database" onPress={handleRestore} color={colors.health} />
-          </View>
-        </View>
-      </View>
-
-      {/* 7. About Section Info */}
+      {/* 6. About Section Info */}
       <View style={[styles.card, styles.aboutCard, { backgroundColor: colors.white, borderColor: colors.borderLight }]}>
         <View style={styles.headerRow}>
           <View style={[styles.iconWrap, { backgroundColor: colors.accentLight.habits }]}>
@@ -919,11 +876,6 @@ const styles = StyleSheet.create({
   actionButtonText: {
     fontSize: 12,
     fontWeight: '700',
-  },
-  grid: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 4,
   },
   versionText: {
     fontSize: 10,
