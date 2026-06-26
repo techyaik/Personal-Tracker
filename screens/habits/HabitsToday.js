@@ -4,6 +4,7 @@ import { useTheme } from '../../theme/ThemeContext';
 import { CATEGORIES } from '../../constants/categories';
 import { AppHeader } from '../../components/AppHeader';
 import { EmptyState } from '../../components/EmptyState';
+import { FeatureWalkthrough } from '../../components/FeatureWalkthrough';
 import { HabitRow } from '../../components/Rows';
 import { Screen } from '../../components/Screen';
 import { SectionHeader } from '../../components/SectionHeader';
@@ -11,6 +12,7 @@ import { FAB } from '../../components/FAB';
 import { useHabits } from '../../hooks/useHabits';
 import { displayDate, todayKey, shouldCountForGoal } from '../../utils/dates';
 import { RADIUS, SHADOWS } from '../../constants/theme';
+import { WALKTHROUGH_STEPS } from '../../constants/walkthroughs';
 
 export default function HabitsToday({ navigation }) {
   const { habits, loading, isDone, toggleCompletion, getStreak, getWeekPercents, deleteHabit } = useHabits();
@@ -94,6 +96,7 @@ export default function HabitsToday({ navigation }) {
           <FAB color={colors.habits} onPress={() => navigation.navigate('AddHabit')} />
         </View>
       )}
+      <FeatureWalkthrough screenKey="habits" steps={WALKTHROUGH_STEPS.habits} />
     </View>
   );
 }

@@ -3,12 +3,14 @@ import { Alert, StyleSheet, Text, View, Switch, Share, Platform } from 'react-na
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
 import { AppHeader } from '../components/AppHeader';
+import { FeatureWalkthrough } from '../components/FeatureWalkthrough';
 import { Screen } from '../components/Screen';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { getData, setData } from '../storage/storage';
 import { showToast } from '../utils/feedback';
 import { RADIUS, SHADOWS } from '../constants/theme';
 import { clearMemoryCache } from '../hooks/useStoredList';
+import { WALKTHROUGH_STEPS } from '../constants/walkthroughs';
 
 export default function PrivacyManagement({ navigation }) {
   const { colors, triggerDataRefresh } = useTheme();
@@ -177,6 +179,7 @@ export default function PrivacyManagement({ navigation }) {
           </View>
         </View>
       </View>
+      <FeatureWalkthrough screenKey="privacy" steps={WALKTHROUGH_STEPS.privacy} />
     </Screen>
   );
 }

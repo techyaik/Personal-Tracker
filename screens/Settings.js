@@ -7,12 +7,14 @@ import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../theme/ThemeContext';
 import { RADIUS, SHADOWS } from '../constants/theme';
 import { AppHeader } from '../components/AppHeader';
+import { FeatureWalkthrough, resetFeatureWalkthroughs } from '../components/FeatureWalkthrough';
 import { Screen } from '../components/Screen';
 import { SectionHeader } from '../components/SectionHeader';
 import { InputField } from '../components/InputField';
 import { getData, setData } from '../storage/storage';
 import { showToast } from '../utils/feedback';
 import { clearMemoryCache } from '../hooks/useStoredList';
+import { WALKTHROUGH_STEPS } from '../constants/walkthroughs';
 
 const DUMMY_PREFIX = 'lifio_dummy_';
 const DEVELOPER_PASSCODE = '8080';
@@ -483,6 +485,16 @@ export default function Settings() {
     }
   };
 
+  const replayWalkthroughs = async () => {
+    try {
+      await resetFeatureWalkthroughs();
+      showToast('Feature walkthroughs reset ✓');
+    } catch (error) {
+      console.error('Error resetting feature walkthroughs:', error);
+      Alert.alert('Could not reset walkthroughs', 'Please try again.');
+    }
+  };
+
   return (
     <Screen>
       <AppHeader
@@ -699,6 +711,26 @@ export default function Settings() {
         </View>
       ) : null}
 
+      {/* 5. Feature Guides Section */}
+      <View style={styles.section}>
+        <SectionHeader>Feature Guides</SectionHeader>
+        <View style={[styles.card, { backgroundColor: colors.white, borderColor: colors.borderLight }]}>
+          <Text style={[styles.cardDesc, { color: colors.textSecondary }]}>
+            Reset and replay the visual tours for all the main screens in the application.
+          </Text>
+          <Pressable
+            onPress={replayWalkthroughs}
+            style={[
+              styles.actionButton,
+              { backgroundColor: colors.accentLight.health, borderColor: colors.health, marginTop: 4 }
+            ]}
+          >
+            <Ionicons name="refresh-circle-outline" size={18} color={colors.health} />
+            <Text style={[styles.actionButtonText, { color: colors.health }]}>Replay Walkthroughs</Text>
+          </Pressable>
+        </View>
+      </View>
+
       {/* 6. About Section Info */}
       <View style={[styles.card, styles.aboutCard, { backgroundColor: colors.white, borderColor: colors.borderLight }]}>
         <View style={styles.headerRow}>
@@ -760,6 +792,7 @@ export default function Settings() {
           </View>
         </View>
       </Modal>
+      <FeatureWalkthrough screenKey="settings" steps={WALKTHROUGH_STEPS.settings} />
     </Screen>
   );
 }

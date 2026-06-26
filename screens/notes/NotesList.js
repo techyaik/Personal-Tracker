@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme/ThemeContext';
 import { AppHeader } from '../../components/AppHeader';
 import { EmptyState } from '../../components/EmptyState';
+import { FeatureWalkthrough } from '../../components/FeatureWalkthrough';
 import { InputField } from '../../components/InputField';
 import { NoteCard } from '../../components/NoteCard';
 import { Pill } from '../../components/Pill';
@@ -11,6 +12,7 @@ import { Screen } from '../../components/Screen';
 import { FAB } from '../../components/FAB';
 import { useNotes } from '../../hooks/useNotes';
 import { RADIUS, SHADOWS } from '../../constants/theme';
+import { WALKTHROUGH_STEPS } from '../../constants/walkthroughs';
 
 export default function NotesList({ navigation, route }) {
   const { notes, loading, deleteNote, getAllTags } = useNotes();
@@ -86,6 +88,7 @@ export default function NotesList({ navigation, route }) {
           <FAB color={colors.notes} onPress={() => navigation.navigate('NoteEditor')} />
         </View>
       )}
+      <FeatureWalkthrough screenKey="notes" steps={WALKTHROUGH_STEPS.notes} />
     </View>
   );
 }

@@ -3,10 +3,12 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
 import { AppHeader } from '../components/AppHeader';
+import { FeatureWalkthrough, resetFeatureWalkthroughs } from '../components/FeatureWalkthrough';
 import { Screen } from '../components/Screen';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { showToast } from '../utils/feedback';
 import { RADIUS, SHADOWS } from '../constants/theme';
+import { WALKTHROUGH_STEPS } from '../constants/walkthroughs';
 
 export default function Help({ navigation }) {
   const { colors } = useTheme();
@@ -40,6 +42,15 @@ export default function Help({ navigation }) {
     showToast('Support ticket logged ✓');
   };
 
+  const handleReplay = async () => {
+    try {
+      await resetFeatureWalkthroughs();
+      showToast('Walkthrough guides reset ✓');
+    } catch (error) {
+      console.error('Error resetting walkthroughs:', error);
+    }
+  };
+
   return (
     <Screen>
       <AppHeader title="Help & Support" onBack={() => navigation.navigate('Main')} />
@@ -59,6 +70,7 @@ export default function Help({ navigation }) {
           Browse common topics below. For custom requests or feedback, tap the button to submit a message to our developers.
         </Text>
         <PrimaryButton title="Send Feedback / Ticket" onPress={contactSupport} color={colors.health} />
+        <PrimaryButton title="Replay Walkthrough Guides" onPress={handleReplay} color={colors.health} style={{ marginTop: 8 }} />
       </View>
 
       {/* FAQs */}
@@ -93,6 +105,7 @@ export default function Help({ navigation }) {
           })}
         </View>
       </View>
+      <FeatureWalkthrough screenKey="help" steps={WALKTHROUGH_STEPS.help} />
     </Screen>
   );
 }

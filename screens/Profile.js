@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
 import { AppHeader } from '../components/AppHeader';
+import { FeatureWalkthrough } from '../components/FeatureWalkthrough';
 import { Screen } from '../components/Screen';
 import { MetricCard } from '../components/MetricCard';
 import { useHabits } from '../hooks/useHabits';
@@ -10,6 +11,7 @@ import { useHealth } from '../hooks/useHealth';
 import { useWallet } from '../hooks/useWallet';
 import { useNotes } from '../hooks/useNotes';
 import { RADIUS, SHADOWS } from '../constants/theme';
+import { WALKTHROUGH_STEPS } from '../constants/walkthroughs';
 
 export default function Profile({ navigation }) {
   const { colors } = useTheme();
@@ -90,6 +92,7 @@ export default function Profile({ navigation }) {
           />
         </View>
       </View>
+      <FeatureWalkthrough screenKey="profile" steps={WALKTHROUGH_STEPS.profile} />
     </Screen>
   );
 }

@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
 import { AppHeader } from '../components/AppHeader';
+import { FeatureWalkthrough } from '../components/FeatureWalkthrough';
 import { Screen } from '../components/Screen';
 import { useHabits } from '../hooks/useHabits';
 import { useHealth } from '../hooks/useHealth';
@@ -13,6 +14,7 @@ import { MOODS } from '../constants/categories';
 import { displayDate, todayKey, shouldCountForGoal } from '../utils/dates';
 import { RADIUS, SHADOWS } from '../constants/theme';
 import { showToast } from '../utils/feedback';
+import { WALKTHROUGH_STEPS } from '../constants/walkthroughs';
 
 export default function Home({ navigation }) {
   const { colors } = useTheme();
@@ -264,6 +266,7 @@ export default function Home({ navigation }) {
           </Pressable>
         </View>
       </View>
+      <FeatureWalkthrough screenKey="home" steps={WALKTHROUGH_STEPS.home} />
     </Screen>
   );
 }

@@ -12,6 +12,7 @@ import {
 import { useTheme } from '../../theme/ThemeContext';
 import { AppHeader } from '../../components/AppHeader';
 import { EmptyState } from '../../components/EmptyState';
+import { FeatureWalkthrough } from '../../components/FeatureWalkthrough';
 import { ListRow } from '../../components/Rows';
 import { MetricCard } from '../../components/MetricCard';
 import { PrimaryButton } from '../../components/PrimaryButton';
@@ -20,6 +21,7 @@ import { SectionHeader } from '../../components/SectionHeader';
 import { useHealth } from '../../hooks/useHealth';
 import { displayDate, todayKey } from '../../utils/dates';
 import { RADIUS, SHADOWS } from '../../constants/theme';
+import { WALKTHROUGH_STEPS } from '../../constants/walkthroughs';
 
 const formatSteps = (steps) => (steps || steps === 0 ? Number(steps).toLocaleString() : '—');
 const percent = (value, goal) => {
@@ -295,6 +297,7 @@ export default function HealthDashboard({ navigation }) {
           />
         )}
       </View>
+      <FeatureWalkthrough screenKey="health" steps={WALKTHROUGH_STEPS.health} />
     </Screen>
   );
 }

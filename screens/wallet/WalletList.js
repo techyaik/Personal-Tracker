@@ -5,6 +5,7 @@ import { addMonths, format, isToday, isYesterday, parseISO } from 'date-fns';
 import { useTheme } from '../../theme/ThemeContext';
 import { AppHeader } from '../../components/AppHeader';
 import { EmptyState } from '../../components/EmptyState';
+import { FeatureWalkthrough } from '../../components/FeatureWalkthrough';
 import { Pill } from '../../components/Pill';
 import { Screen } from '../../components/Screen';
 import { SectionHeader } from '../../components/SectionHeader';
@@ -16,6 +17,7 @@ import { TransactionModal } from '../../components/TransactionModal';
 import { useWallet } from '../../hooks/useWallet';
 import { showToast } from '../../utils/feedback';
 import { RADIUS, SHADOWS } from '../../constants/theme';
+import { WALKTHROUGH_STEPS } from '../../constants/walkthroughs';
 
 const EXPENSE_CATEGORIES = ['Food', 'Transport', 'Bills', 'Fun', 'Shopping', 'Health', 'Travel', 'Other'];
 const INCOME_CATEGORIES = ['Salary', 'Freelance', 'Gift', 'Investment', 'Other'];
@@ -419,6 +421,7 @@ export default function WalletList({ navigation }) {
         currencies={currencies}
         onCurrencyChange={setCurrency}
       />
+      <FeatureWalkthrough screenKey="wallet" steps={WALKTHROUGH_STEPS.wallet} />
     </View>
   );
 }
