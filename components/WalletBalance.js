@@ -11,10 +11,12 @@ export function WalletBalance({
   monthLabel,
   onPrevMonth,
   onNextMonth,
+  formatMoney,
 }) {
   const { colors } = useTheme();
 
   const fmt = (n) => {
+    if (formatMoney) return formatMoney(n);
     return '$' + Number(n).toLocaleString('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,

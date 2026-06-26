@@ -30,10 +30,10 @@ const ICONS_LIST = [
   'card-outline',
   'cash-outline',
   'business-outline',
-  'piggy-bank-outline',
+  'briefcase-outline',
 ];
 
-export function WalletModal({ visible, onClose, wallet, onSave, onDelete }) {
+export function WalletModal({ visible, onClose, wallet, onSave, onDelete, currencySymbol = '$' }) {
   const { colors } = useTheme();
 
   const [name, setName] = useState('');
@@ -130,7 +130,7 @@ export function WalletModal({ visible, onClose, wallet, onSave, onDelete }) {
 
             {/* Initial Balance */}
             <View style={styles.fieldGroup}>
-              <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Initial Balance ($)</Text>
+              <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Initial Balance ({currencySymbol})</Text>
               <InputField
                 value={initialBalance}
                 onChangeText={setInitialBalance}

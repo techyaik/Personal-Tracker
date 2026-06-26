@@ -77,6 +77,12 @@ export default function HealthDayDetail({ navigation, route }) {
           icon={<Ionicons name="water-outline" size={16} color={colors.health} />}
         />
       </View>
+      {entry.period ? (
+        <View style={[styles.periodBanner, { backgroundColor: colors.accentLight.health, borderColor: colors.health }]}>
+          <Ionicons name="water" size={18} color={colors.health} />
+          <Text style={[styles.periodBannerText, { color: colors.health }]}>Period started on this day</Text>
+        </View>
+      ) : null}
       <View style={styles.section}>
         <SectionHeader>Weekly weight</SectionHeader>
         <BarChart
@@ -120,5 +126,18 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     padding: 14,
     ...SHADOWS.subtle,
+  },
+  periodBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    gap: 8,
+    marginVertical: 4,
+  },
+  periodBannerText: {
+    fontSize: 14,
+    fontWeight: '700',
   },
 });

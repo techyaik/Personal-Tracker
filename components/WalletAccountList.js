@@ -4,10 +4,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
 import { RADIUS, SHADOWS } from '../constants/theme';
 
-export function WalletAccountList({ wallets, selectedWalletId, onSelect, onEdit, onAdd }) {
+export function WalletAccountList({ wallets, selectedWalletId, onSelect, onEdit, onAdd, formatMoney }) {
   const { colors } = useTheme();
 
   const fmt = (n) => {
+    if (formatMoney) return formatMoney(n);
     return '$' + Number(n).toLocaleString('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,

@@ -19,7 +19,7 @@ export default function Home({ navigation }) {
 
   const { habits, completions, getDayCompletionPercent, getStreak, toggleCompletion, isDone } = useHabits();
   const { logs, getTodayLog } = useHealth();
-  const { wallets, transactions } = useWallet();
+  const { wallets, transactions, formatMoney } = useWallet();
   const { notes } = useNotes();
 
   const [todayMood, setTodayMood] = React.useState(null);
@@ -49,6 +49,7 @@ export default function Home({ navigation }) {
   }, [wallets]);
 
   const fmt = (n) => {
+    if (formatMoney) return formatMoney(n);
     return '$' + Number(n).toLocaleString('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,

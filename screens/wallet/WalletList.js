@@ -40,6 +40,10 @@ export default function WalletList({ navigation }) {
     addTransaction,
     editTransaction,
     deleteTransaction,
+    currency,
+    currencies,
+    setCurrency,
+    formatMoney,
   } = useWallet();
 
   const [month, setMonth] = useState(new Date());
@@ -113,6 +117,16 @@ export default function WalletList({ navigation }) {
       setActiveCategory('All');
     }
   }, [categoryFiltersList, activeCategory]);
+
+  // If the selectedWalletId is no longer in the wallets list, fall back to 'all'
+  React.useEffect(() => {
+    if (selectedWalletId !== 'all' && wallets && wallets.length > 0) {
+      const exists = wallets.some((w) => w.id === selectedWalletId);
+      if (!exists) {
+        setSelectedWalletId('all');
+      }
+    }
+  }, [wallets, selectedWalletId]);
 
   // Calculate Monthly In/Out totals (transfers are excluded)
   const totals = useMemo(() => {
@@ -241,7 +255,7 @@ export default function WalletList({ navigation }) {
   const handleDeleteTxClick = (tx) => {
     Alert.alert(
       'Delete Transaction?',
-      `Delete "${tx.label}" for $${Number(tx.amount).toFixed(2)}? This action cannot be undone.`,
+      `Delete "${tx.label}" for ${formatMoney(tx.amount)}? This action cannot be undone.`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -267,6 +281,7 @@ export default function WalletList({ navigation }) {
         onSelect={setSelectedWalletId}
         onEdit={handleEditWalletClick}
         onAdd={handleAddWalletClick}
+        formatMoney={formatMoney}
       />
 
       {/* 2. Monthly Balance Tracker Card */}
@@ -277,6 +292,7 @@ export default function WalletList({ navigation }) {
         monthLabel={monthLabel}
         onPrevMonth={handlePrevMonth}
         onNextMonth={handleNextMonth}
+        formatMoney={formatMoney}
       />
 
       {/* 3. Transaction Type Filters */}
@@ -340,6 +356,7 @@ export default function WalletList({ navigation }) {
                   transaction={item.tx}
                   onPress={() => handleEditTxClick(item.tx)}
                   onDelete={() => handleDeleteTxClick(item.tx)}
+                  formatMoney={formatMoney}
                 />
               </View>
             </View>
@@ -375,6 +392,7 @@ export default function WalletList({ navigation }) {
         onClose={() => setWalletModalVisible(false)}
         onSave={handleSaveWallet}
         onDelete={handleDeleteWallet}
+        currencySymbol={currency.symbol}
       />
 
       {/* Transactions Creator/Editor Modal */}
@@ -384,6 +402,9 @@ export default function WalletList({ navigation }) {
         wallets={wallets}
         onClose={() => setTxModalVisible(false)}
         onSave={handleSaveTx}
+        currency={currency}
+        currencies={currencies}
+        onCurrencyChange={setCurrency}
       />
     </View>
   );

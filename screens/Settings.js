@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { Alert, StyleSheet, Text, View, Switch, Pressable, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Alert, Modal, StyleSheet, Text, View, Switch, Pressable, Platform } from 'react-native';
 import { addDays, format, subDays } from 'date-fns';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -15,6 +16,7 @@ import { showToast } from '../utils/feedback';
 import { clearMemoryCache } from '../hooks/useStoredList';
 
 const DUMMY_PREFIX = 'lifio_dummy_';
+const DEVELOPER_PASSCODE = '8080';
 
 const keyFor = (offset = 0) => format(addDays(new Date(), offset), 'yyyy-MM-dd');
 const isoFor = (offset = 0) => addDays(new Date(), offset).toISOString();
@@ -59,6 +61,7 @@ async function fillDummyData() {
       water: 7,
       notes: '',
       createdAt: isoFor(-2),
+      period: true,
     },
   ];
 
@@ -141,7 +144,7 @@ async function fillDummyData() {
       name: 'Savings',
       initialBalance: 500.00,
       color: '#534AB7',
-      icon: 'piggy-bank-outline',
+      icon: 'briefcase-outline',
       createdAt: isoFor(-5),
     },
     {
@@ -263,15 +266,138 @@ export default function Settings() {
   const navigation = useNavigation();
   const { colors, themeMode, setThemeMode, triggerDataRefresh } = useTheme();
 
-  // Mock settings states
+  // Settings keys
+  const DEVELOPER_MODE_KEY = 'lifio_developer_mode';
+  const NOTIFICATIONS_KEY = 'lifio_notifications';
+  const REMINDERS_KEY = 'lifio_reminders';
+  const LANGUAGE_KEY = 'lifio_language';
+  const REMIDER_TIME_KEY = 'lifio_default_reminder_time';
+  const LOCATION_PERM_KEY = 'lifio_location_perm';
+  const HEALTHKIT_PERM_KEY = 'lifio_healthkit_perm';
+  const CYCLE_REMINDERS_KEY = 'lifio_cycle_reminders';
+
+  // Settings states
   const [notifications, setNotifications] = useState(true);
   const [reminders, setReminders] = useState(true);
   const [language, setLanguage] = useState('English');
   const [defaultReminderTime, setDefaultReminderTime] = useState('08:00');
   const [locationPerm, setLocationPerm] = useState(false);
   const [healthKitPerm, setHealthKitPerm] = useState(true);
+  const [cycleReminders, setCycleReminders] = useState(true);
+  const [developerMode, setDeveloperMode] = useState(false);
+  const [passcodeModalVisible, setPasscodeModalVisible] = useState(false);
+  const [passcode, setPasscode] = useState('');
+  const [passcodeError, setPasscodeError] = useState('');
+  const [versionTapCount, setVersionTapCount] = useState(0);
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const storedDev = await AsyncStorage.getItem(DEVELOPER_MODE_KEY);
+        if (storedDev === 'true') setDeveloperMode(true);
+
+        const storedNotif = await AsyncStorage.getItem(NOTIFICATIONS_KEY);
+        if (storedNotif !== null) setNotifications(storedNotif === 'true');
+
+        const storedRem = await AsyncStorage.getItem(REMINDERS_KEY);
+        if (storedRem !== null) setReminders(storedRem === 'true');
+
+        const storedLang = await AsyncStorage.getItem(LANGUAGE_KEY);
+        if (storedLang !== null) setLanguage(storedLang);
+
+        const storedTime = await AsyncStorage.getItem(REMIDER_TIME_KEY);
+        if (storedTime !== null) setDefaultReminderTime(storedTime);
+
+        const storedLoc = await AsyncStorage.getItem(LOCATION_PERM_KEY);
+        if (storedLoc !== null) setLocationPerm(storedLoc === 'true');
+
+        const storedHealth = await AsyncStorage.getItem(HEALTHKIT_PERM_KEY);
+        if (storedHealth !== null) setHealthKitPerm(storedHealth === 'true');
+
+        const storedCycle = await AsyncStorage.getItem(CYCLE_REMINDERS_KEY);
+        if (storedCycle !== null) setCycleReminders(storedCycle === 'true');
+      } catch (e) {
+        console.error('Error loading settings from AsyncStorage:', e);
+      }
+    };
+    loadSettings();
+  }, []);
+
+  const updateNotifications = async (val) => {
+    setNotifications(val);
+    await AsyncStorage.setItem(NOTIFICATIONS_KEY, String(val));
+  };
+  const updateReminders = async (val) => {
+    setReminders(val);
+    await AsyncStorage.setItem(REMINDERS_KEY, String(val));
+  };
+  const updateReminderTime = async (val) => {
+    setDefaultReminderTime(val);
+    await AsyncStorage.setItem(REMIDER_TIME_KEY, val);
+  };
+  const updateLocationPerm = async (val) => {
+    setLocationPerm(val);
+    await AsyncStorage.setItem(LOCATION_PERM_KEY, String(val));
+  };
+  const updateHealthKitPerm = async (val) => {
+    setHealthKitPerm(val);
+    await AsyncStorage.setItem(HEALTHKIT_PERM_KEY, String(val));
+  };
+  const updateCycleReminders = async (val) => {
+    setCycleReminders(val);
+    await AsyncStorage.setItem(CYCLE_REMINDERS_KEY, String(val));
+  };
+
+  const requestDeveloperMode = () => {
+    setPasscode('');
+    setPasscodeError('');
+    setPasscodeModalVisible(true);
+  };
+
+  const enableDeveloperMode = async () => {
+    if (passcode.trim() !== DEVELOPER_PASSCODE) {
+      setPasscodeError('Incorrect passcode. Developer Mode remains disabled.');
+      return;
+    }
+    setDeveloperMode(true);
+    setPasscode('');
+    setPasscodeError('');
+    setPasscodeModalVisible(false);
+    showToast('Developer Mode enabled ✓');
+    try {
+      await AsyncStorage.setItem(DEVELOPER_MODE_KEY, 'true');
+    } catch (e) {
+      console.error('Error saving developer mode state:', e);
+    }
+  };
+
+  const disableDeveloperMode = async () => {
+    setDeveloperMode(false);
+    setVersionTapCount(0);
+    showToast('Developer Mode disabled');
+    try {
+      await AsyncStorage.setItem(DEVELOPER_MODE_KEY, 'false');
+    } catch (e) {
+      console.error('Error saving developer mode state:', e);
+    }
+  };
+
+  const handleVersionTap = () => {
+    if (developerMode) return;
+    const nextCount = versionTapCount + 1;
+    if (nextCount >= 5) {
+      setVersionTapCount(0);
+      requestDeveloperMode();
+      return;
+    }
+    setVersionTapCount(nextCount);
+  };
 
   const confirmFill = () => {
+    if (!developerMode) {
+      Alert.alert('Developer Mode required', 'Enable Developer Mode before loading dummy data.');
+      return;
+    }
     const message = 'This will populate habits, health logs, wallet transactions, and notes with realistic dummy records. Existing dummy data will be updated.';
     const runFill = async () => {
       try {
@@ -313,6 +439,10 @@ export default function Settings() {
   };
 
   const confirmErase = () => {
+    if (!developerMode) {
+      Alert.alert('Developer Mode required', 'Enable Developer Mode before erasing dummy data.');
+      return;
+    }
     const message = 'This will permanently delete all generated Lifio dummy entries. Your own real tracked metrics and notes will not be affected.';
     const runErase = async () => {
       try {
@@ -453,14 +583,14 @@ export default function Settings() {
             </View>
             <Switch
               value={notifications}
-              onValueChange={setNotifications}
+              onValueChange={updateNotifications}
               trackColor={{ false: colors.border, true: colors.health }}
               thumbColor={colors.white}
             />
           </View>
-
+ 
           <View style={[styles.divider, { backgroundColor: colors.borderLight }]} />
-
+ 
           <View style={styles.optionRow}>
             <View style={styles.optionInfo}>
               <Text style={[styles.optionTitle, { color: colors.textPrimary }]}>Habit Reminders</Text>
@@ -468,14 +598,14 @@ export default function Settings() {
             </View>
             <Switch
               value={reminders}
-              onValueChange={setReminders}
+              onValueChange={updateReminders}
               trackColor={{ false: colors.border, true: colors.health }}
               thumbColor={colors.white}
             />
           </View>
-
+ 
           <View style={[styles.divider, { backgroundColor: colors.borderLight }]} />
-
+ 
           <View style={styles.optionRow}>
             <View style={styles.optionInfo}>
               <Text style={[styles.optionTitle, { color: colors.textPrimary }]}>App Language</Text>
@@ -491,7 +621,7 @@ export default function Settings() {
           </View>
         </View>
       </View>
-
+ 
       {/* 3. Default Preferences */}
       <View style={styles.section}>
         <SectionHeader>Defaults</SectionHeader>
@@ -500,14 +630,14 @@ export default function Settings() {
             <Text style={[styles.optionTitle, { color: colors.textPrimary }]}>Default Habits reminder time</Text>
             <InputField
               value={defaultReminderTime}
-              onChangeText={setDefaultReminderTime}
+              onChangeText={updateReminderTime}
               placeholder="e.g. 08:00"
               style={{ marginTop: 8 }}
             />
           </View>
         </View>
       </View>
-
+ 
       {/* 4. App Permissions */}
       <View style={styles.section}>
         <SectionHeader>App Permissions</SectionHeader>
@@ -519,7 +649,22 @@ export default function Settings() {
             </View>
             <Switch
               value={locationPerm}
-              onValueChange={setLocationPerm}
+              onValueChange={updateLocationPerm}
+              trackColor={{ false: colors.border, true: colors.health }}
+              thumbColor={colors.white}
+            />
+          </View>
+ 
+          <View style={[styles.divider, { backgroundColor: colors.borderLight }]} />
+ 
+          <View style={styles.optionRow}>
+            <View style={styles.optionInfo}>
+              <Text style={[styles.optionTitle, { color: colors.textPrimary }]}>Health Integration</Text>
+              <Text style={[styles.optionDesc, { color: colors.textSecondary }]}>Import steps and sleep automatically</Text>
+            </View>
+            <Switch
+              value={healthKitPerm}
+              onValueChange={updateHealthKitPerm}
               trackColor={{ false: colors.border, true: colors.health }}
               thumbColor={colors.white}
             />
@@ -529,12 +674,12 @@ export default function Settings() {
 
           <View style={styles.optionRow}>
             <View style={styles.optionInfo}>
-              <Text style={[styles.optionTitle, { color: colors.textPrimary }]}>Health Integration</Text>
-              <Text style={[styles.optionDesc, { color: colors.textSecondary }]}>Import steps and sleep automatically</Text>
+              <Text style={[styles.optionTitle, { color: colors.textPrimary }]}>Menstrual Cycle Reminders</Text>
+              <Text style={[styles.optionDesc, { color: colors.textSecondary }]}>Get notified about upcoming cycles</Text>
             </View>
             <Switch
-              value={healthKitPerm}
-              onValueChange={setHealthKitPerm}
+              value={cycleReminders}
+              onValueChange={updateCycleReminders}
               trackColor={{ false: colors.border, true: colors.health }}
               thumbColor={colors.white}
             />
@@ -542,38 +687,46 @@ export default function Settings() {
         </View>
       </View>
 
-      {/* 5. Data Management (Input & Erase Dummy Data) */}
-      <View style={styles.section}>
-        <SectionHeader>Data Management</SectionHeader>
-        <View style={[styles.card, { backgroundColor: colors.white, borderColor: colors.borderLight }]}>
-          <Text style={[styles.cardDesc, { color: colors.textSecondary }]}>
-            Populate sample database logs to evaluate dashboard statistics and charts.
-          </Text>
-          <View style={styles.buttonRow}>
-            <Pressable
-              onPress={confirmFill}
-              style={[
-                styles.actionButton,
-                { backgroundColor: colors.accentLight.health, borderColor: colors.health }
-              ]}
-            >
-              <Ionicons name="cloud-upload-outline" size={18} color={colors.health} />
-              <Text style={[styles.actionButtonText, { color: colors.health }]}>Input Dummy Data</Text>
-            </Pressable>
+      {developerMode ? (
+        <View style={styles.section}>
+          <SectionHeader>Developer Tools</SectionHeader>
+          <View style={[styles.card, { backgroundColor: colors.white, borderColor: colors.borderLight }]}>
+            <Text style={[styles.cardDesc, { color: colors.textSecondary }]}>
+              Dummy records are tagged separately and can be removed without deleting real user data.
+            </Text>
+            <View style={styles.buttonRow}>
+              <Pressable
+                onPress={confirmFill}
+                style={[
+                  styles.actionButton,
+                  { backgroundColor: colors.accentLight.health, borderColor: colors.health }
+                ]}
+              >
+                <Ionicons name="cloud-upload-outline" size={18} color={colors.health} />
+                <Text style={[styles.actionButtonText, { color: colors.health }]}>Input Dummy Data</Text>
+              </Pressable>
 
+              <Pressable
+                onPress={confirmErase}
+                style={[
+                  styles.actionButton,
+                  { backgroundColor: colors.dangerBg, borderColor: colors.danger }
+                ]}
+              >
+                <Ionicons name="trash-outline" size={18} color={colors.danger} />
+                <Text style={[styles.actionButtonText, { color: colors.danger }]}>Erase Dummy Data</Text>
+              </Pressable>
+            </View>
             <Pressable
-              onPress={confirmErase}
-              style={[
-                styles.actionButton,
-                { backgroundColor: colors.dangerBg, borderColor: colors.danger }
-              ]}
+              onPress={disableDeveloperMode}
+              style={[styles.actionButton, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}
             >
-              <Ionicons name="trash-outline" size={18} color={colors.danger} />
-              <Text style={[styles.actionButtonText, { color: colors.danger }]}>Erase Dummy Data</Text>
+              <Ionicons name="power-outline" size={18} color={colors.textSecondary} />
+              <Text style={[styles.actionButtonText, { color: colors.textSecondary }]}>Turn Off Developer Mode</Text>
             </Pressable>
           </View>
         </View>
-      </View>
+      ) : null}
 
       {/* 6. Backup and Restore */}
       <View style={styles.section}>
@@ -600,8 +753,56 @@ export default function Settings() {
             <Text style={[styles.cardDesc, { color: colors.textSecondary }]}>A personal ledger, health, and habits tracker for mindful momentum.</Text>
           </View>
         </View>
-        <Text style={[styles.versionText, { color: colors.textHint }]}>Version 1.0.0 (Production Build)</Text>
+        <Pressable onPress={handleVersionTap} hitSlop={8}>
+          <Text style={[styles.versionText, { color: colors.textHint }]}>Version 1.0.0 (Production Build)</Text>
+        </Pressable>
       </View>
+
+      <Modal visible={passcodeModalVisible} transparent animationType="fade" onRequestClose={() => setPasscodeModalVisible(false)}>
+        <View style={[styles.modalBackdrop, { backgroundColor: colors.overlay }]}>
+          <View style={[styles.modalCard, { backgroundColor: colors.white, borderColor: colors.borderLight }]}>
+            <View style={styles.headerRow}>
+              <View style={[styles.iconWrap, { backgroundColor: colors.accentLight.health }]}>
+                <Ionicons name="lock-closed-outline" size={22} color={colors.health} />
+              </View>
+              <View style={styles.titleColumn}>
+                <Text style={[styles.title, { color: colors.textPrimary }]}>Enable Developer Mode</Text>
+                <Text style={[styles.cardDesc, { color: colors.textSecondary }]}>Enter the developer passcode to continue.</Text>
+              </View>
+            </View>
+            <InputField
+              value={passcode}
+              onChangeText={(value) => {
+                setPasscode(value);
+                if (passcodeError) setPasscodeError('');
+              }}
+              placeholder="Passcode"
+              secureTextEntry
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            {passcodeError ? <Text style={[styles.errorText, { color: colors.danger }]}>{passcodeError}</Text> : null}
+            <View style={styles.buttonRow}>
+              <Pressable
+                onPress={() => {
+                  setPasscodeModalVisible(false);
+                  setPasscode('');
+                  setPasscodeError('');
+                }}
+                style={[styles.actionButton, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}
+              >
+                <Text style={[styles.actionButtonText, { color: colors.textSecondary }]}>Cancel</Text>
+              </Pressable>
+              <Pressable
+                onPress={enableDeveloperMode}
+                style={[styles.actionButton, { backgroundColor: colors.accentLight.health, borderColor: colors.health }]}
+              >
+                <Text style={[styles.actionButtonText, { color: colors.health }]}>Enable</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </Screen>
   );
 }
@@ -729,5 +930,21 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
     marginTop: 4,
+  },
+  modalBackdrop: {
+    flex: 1,
+    justifyContent: 'center',
+    padding: 24,
+  },
+  modalCard: {
+    borderRadius: RADIUS.lg,
+    borderWidth: 1,
+    gap: 14,
+    padding: 16,
+    ...SHADOWS.soft,
+  },
+  errorText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
 });

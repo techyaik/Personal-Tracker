@@ -5,5 +5,9 @@ export const showToast = (message) => {
     ToastAndroid.show(message, ToastAndroid.SHORT);
     return;
   }
+  if (Platform.OS === 'web') {
+    alert(message);
+    return;
+  }
   Alert.alert(message);
 };

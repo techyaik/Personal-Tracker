@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, StyleSheet, View, Switch, Text } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
 import { AppHeader } from '../../components/AppHeader';
 import { InputField } from '../../components/InputField';
@@ -21,6 +21,7 @@ export default function HealthLogEntry({ navigation, route }) {
     steps: '',
     water: '',
     notes: '',
+    period: false,
   });
 
   useEffect(() => {
@@ -32,6 +33,7 @@ export default function HealthLogEntry({ navigation, route }) {
         steps: editing.steps ? String(editing.steps) : '',
         water: editing.water ? String(editing.water) : '',
         notes: editing.notes || '',
+        period: editing.period || false,
       });
     }
   }, [editing?.id]);
@@ -49,7 +51,7 @@ export default function HealthLogEntry({ navigation, route }) {
       return;
     }
 
-    const hasMetric = ['weight', 'sleep', 'steps', 'water', 'notes'].some((key) => String(form[key]).trim());
+    const hasMetric = ['weight', 'sleep', 'steps', 'water', 'notes'].some((key) => String(form[key]).trim()) || form.period;
     if (!hasMetric) {
       Alert.alert('Add at least one metric', 'Fill one field before saving this health log.');
       return;
@@ -80,6 +82,7 @@ export default function HealthLogEntry({ navigation, route }) {
       steps: form.steps ? Number.parseInt(form.steps, 10) : null,
       water: form.water ? Number.parseInt(form.water, 10) : null,
       notes: form.notes.trim(),
+      period: form.period || false,
     };
     if (editing) {
       await updateLog(editing.id, payload);
@@ -117,6 +120,15 @@ export default function HealthLogEntry({ navigation, route }) {
             <InputField value={form.steps} onChangeText={(v) => setValue('steps', v)} placeholder="Steps" keyboardType="number-pad" />
             <InputField value={form.water} onChangeText={(v) => setValue('water', v)} placeholder="Water (glasses)" keyboardType="number-pad" />
             <InputField value={form.notes} onChangeText={(v) => setValue('notes', v)} placeholder="Notes" multiline />
+            <View style={styles.switchRow}>
+              <Text style={[styles.switchLabel, { color: colors.textPrimary }]}>Period started today</Text>
+              <Switch
+                value={form.period}
+                onValueChange={(v) => setValue('period', v)}
+                trackColor={{ false: colors.border, true: colors.health }}
+                thumbColor={colors.white}
+              />
+            </View>
           </View>
           <PrimaryButton title="Save log" color={colors.health} onPress={save} />
           {editing ? <PrimaryButton title="Delete log" color={colors.danger} onPress={confirmDelete} style={{ marginTop: 8 }} /> : null}
@@ -129,4 +141,16 @@ export default function HealthLogEntry({ navigation, route }) {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   form: { gap: 8 },
+  switchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 4,
+    marginTop: 4,
+  },
+  switchLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
 });

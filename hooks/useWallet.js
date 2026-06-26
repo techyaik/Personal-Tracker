@@ -1,13 +1,77 @@
-import { useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { parseISO } from 'date-fns';
 import { useStoredList } from './useStoredList';
 
 const TX_KEY = 'wallet_entries';
 const AC_KEY = 'wallet_accounts';
+const CURRENCY_KEY = 'wallet_currency';
+
+export const WALLET_CURRENCIES = [
+  { code: 'USD', symbol: '$', label: 'USD' },
+  { code: 'INR', symbol: '₹', label: 'INR' },
+  { code: 'EUR', symbol: '€', label: 'EUR' },
+  { code: 'GBP', symbol: '£', label: 'GBP' },
+  { code: 'AED', symbol: 'د.إ', label: 'AED' },
+  { code: 'JPY', symbol: '¥', label: 'JPY' },
+  { code: 'CAD', symbol: 'C$', label: 'CAD' },
+  { code: 'AUD', symbol: 'A$', label: 'AUD' },
+  { code: 'CNY', symbol: '元', label: 'CNY' },
+  { code: 'SGD', symbol: 'S$', label: 'SGD' },
+  { code: 'CHF', symbol: 'CHF', label: 'CHF' },
+  { code: 'NZD', symbol: 'NZ$', label: 'NZD' },
+  { code: 'ZAR', symbol: 'R', label: 'ZAR' },
+  { code: 'BRL', symbol: 'R$', label: 'BRL' },
+];
 
 export function useWallet() {
   const { items: txItems, loading: txLoading, saveAll: saveTransactions, refresh: refreshTransactions } = useStoredList(TX_KEY);
   const { items: acItems, loading: acLoading, saveAll: saveAccounts, refresh: refreshAccounts } = useStoredList(AC_KEY);
+  const [currencyCode, setCurrencyCode] = useState(WALLET_CURRENCIES[0].code);
+
+  useEffect(() => {
+    let mounted = true;
+    AsyncStorage.getItem(CURRENCY_KEY)
+      .then((storedCode) => {
+        if (!mounted || !storedCode) return;
+        if (WALLET_CURRENCIES.some((item) => item.code === storedCode)) {
+          setCurrencyCode(storedCode);
+        }
+      })
+      .catch((error) => {
+        console.error('Error reading wallet currency:', error);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const currency = useMemo(
+    () => WALLET_CURRENCIES.find((item) => item.code === currencyCode) || WALLET_CURRENCIES[0],
+    [currencyCode]
+  );
+
+  const setCurrency = useCallback(async (nextCode) => {
+    const nextCurrency = WALLET_CURRENCIES.find((item) => item.code === nextCode);
+    if (!nextCurrency) return;
+    setCurrencyCode(nextCurrency.code);
+    try {
+      await AsyncStorage.setItem(CURRENCY_KEY, nextCurrency.code);
+    } catch (error) {
+      console.error('Error saving wallet currency:', error);
+    }
+  }, []);
+
+  const formatMoney = useCallback(
+    (amount) => {
+      const formatted = Number(amount || 0).toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+      return `${currency.symbol}${formatted}`;
+    },
+    [currency.symbol]
+  );
 
   // Default account configuration
   const defaultAccount = useMemo(() => ({
@@ -110,5 +174,9 @@ export function useWallet() {
     addTransaction,
     editTransaction,
     deleteTransaction,
+    currency,
+    currencies: WALLET_CURRENCIES,
+    setCurrency,
+    formatMoney,
   };
 }

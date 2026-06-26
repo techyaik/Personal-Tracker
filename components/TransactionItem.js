@@ -51,12 +51,13 @@ const getCategoryMeta = (cat, colors) => {
   }
 };
 
-export function TransactionItem({ transaction, onDelete, onPress }) {
+export function TransactionItem({ transaction, onDelete, onPress, formatMoney }) {
   const { colors } = useTheme();
   const { label, cat, amount, type, paymentMethod, notes } = transaction;
   const meta = getCategoryMeta(cat, colors);
 
   const fmt = (n) => {
+    if (formatMoney) return formatMoney(n);
     return '$' + Number(n).toLocaleString('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,

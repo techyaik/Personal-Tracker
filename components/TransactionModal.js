@@ -22,8 +22,18 @@ const EXPENSE_CATEGORIES = ['Food', 'Transport', 'Bills', 'Fun', 'Shopping', 'He
 const INCOME_CATEGORIES = ['Salary', 'Freelance', 'Gift', 'Investment', 'Other'];
 const PAYMENT_METHODS = ['Cash', 'Debit Card', 'Credit Card', 'Bank Transfer', 'Mobile Pay', 'Other'];
 
-export function TransactionModal({ visible, onClose, transaction, wallets, onSave }) {
+export function TransactionModal({
+  visible,
+  onClose,
+  transaction,
+  wallets,
+  onSave,
+  currency,
+  currencies = [],
+  onCurrencyChange,
+}) {
   const { colors } = useTheme();
+  const activeCurrency = currency || { code: 'USD', symbol: '$', label: 'USD' };
 
   const [type, setType] = useState('out'); // 'out' | 'in' | 'transfer'
   const [date, setDate] = useState('');
@@ -239,6 +249,40 @@ export function TransactionModal({ visible, onClose, transaction, wallets, onSav
               </Pressable>
             </View>
 
+            {/* Currency Selection */}
+            {currencies.length > 0 && (
+              <View style={styles.fieldGroup}>
+                <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Currency</Text>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.selectorScroll}
+                >
+                  {currencies.map((item) => {
+                    const isSelected = activeCurrency.code === item.code;
+                    return (
+                      <Pressable
+                        key={item.code}
+                        onPress={() => onCurrencyChange?.(item.code)}
+                        style={[
+                          styles.currencyCard,
+                          { borderColor: colors.borderLight, backgroundColor: colors.surface },
+                          isSelected && { borderColor: colors.wallet, backgroundColor: colors.accentLight.wallet },
+                        ]}
+                      >
+                        <Text style={[styles.currencySymbol, { color: isSelected ? colors.wallet : colors.textPrimary }]}>
+                          {item.symbol}
+                        </Text>
+                        <Text style={[styles.selectLabel, { color: isSelected ? colors.wallet : colors.textPrimary }]}>
+                          {item.label}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </ScrollView>
+              </View>
+            )}
+
             {/* 2. Amount Input & Title Input */}
             <View style={styles.row}>
               <View style={[styles.fieldGroup, { flex: 1.2 }]}>
@@ -250,7 +294,7 @@ export function TransactionModal({ visible, onClose, transaction, wallets, onSav
                 />
               </View>
               <View style={[styles.fieldGroup, { flex: 0.8 }]}>
-                <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Amount ($)</Text>
+                <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Amount ({activeCurrency.symbol})</Text>
                 <InputField
                   value={amount}
                   onChangeText={setAmount}
@@ -471,6 +515,19 @@ const styles = StyleSheet.create({
   selectLabel: {
     fontSize: 12,
     fontWeight: '600',
+  },
+  currencyCard: {
+    alignItems: 'center',
+    borderRadius: RADIUS.md,
+    borderWidth: 1.5,
+    flexDirection: 'row',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  currencySymbol: {
+    fontSize: 13,
+    fontWeight: '800',
   },
   categoriesRow: {
     flexDirection: 'row',
