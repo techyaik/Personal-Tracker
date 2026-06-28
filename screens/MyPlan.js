@@ -3,11 +3,9 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
 import { AppHeader } from '../components/AppHeader';
-import { FeatureWalkthrough } from '../components/FeatureWalkthrough';
 import { Screen } from '../components/Screen';
 import { useHabits } from '../hooks/useHabits';
 import { RADIUS, SHADOWS } from '../constants/theme';
-import { WALKTHROUGH_STEPS } from '../constants/walkthroughs';
 
 export default function MyPlan({ navigation }) {
   const { colors } = useTheme();
@@ -109,7 +107,6 @@ export default function MyPlan({ navigation }) {
           })}
         </View>
       </View>
-      <FeatureWalkthrough screenKey="myPlan" steps={WALKTHROUGH_STEPS.myPlan} />
     </Screen>
   );
 }

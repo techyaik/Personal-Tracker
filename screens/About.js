@@ -3,10 +3,8 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
 import { AppHeader } from '../components/AppHeader';
-import { FeatureWalkthrough } from '../components/FeatureWalkthrough';
 import { Screen } from '../components/Screen';
 import { RADIUS, SHADOWS } from '../constants/theme';
-import { WALKTHROUGH_STEPS } from '../constants/walkthroughs';
 
 export default function About({ navigation }) {
   const { colors } = useTheme();
@@ -69,7 +67,6 @@ export default function About({ navigation }) {
           • **Premium Simplicity**: Crafting layouts that prioritize quick comprehension over complex workflows.
         </Text>
       </View>
-      <FeatureWalkthrough screenKey="about" steps={WALKTHROUGH_STEPS.about} />
     </Screen>
   );
 }

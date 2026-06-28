@@ -6,7 +6,12 @@ import { useTheme } from '../theme/ThemeContext';
 import { RADIUS, SHADOWS } from '../constants/theme';
 import { WALKTHROUGH_STORAGE_PREFIX } from '../constants/walkthroughs';
 
+const completedCache = {};
+
 export async function resetFeatureWalkthroughs() {
+  Object.keys(completedCache).forEach((key) => {
+    delete completedCache[key];
+  });
   const keys = await AsyncStorage.getAllKeys();
   const walkthroughKeys = keys.filter((key) => key.startsWith(WALKTHROUGH_STORAGE_PREFIX));
   if (walkthroughKeys.length) {
@@ -23,9 +28,16 @@ export function FeatureWalkthrough({ screenKey, steps = [] }) {
     let mounted = true;
     const load = async () => {
       if (!screenKey || !steps.length) return;
+      if (completedCache[screenKey]) {
+        if (mounted) setVisible(false);
+        return;
+      }
       try {
         const done = await AsyncStorage.getItem(`${WALKTHROUGH_STORAGE_PREFIX}${screenKey}`);
-        if (!mounted || done === 'true') return;
+        if (!mounted || done === 'true') {
+          if (done === 'true') completedCache[screenKey] = true;
+          return;
+        }
         const timer = setTimeout(() => {
           if (mounted) setVisible(true);
         }, 450);
@@ -44,6 +56,7 @@ export function FeatureWalkthrough({ screenKey, steps = [] }) {
   const complete = async () => {
     setVisible(false);
     setIndex(0);
+    completedCache[screenKey] = true;
     try {
       await AsyncStorage.setItem(`${WALKTHROUGH_STORAGE_PREFIX}${screenKey}`, 'true');
     } catch (error) {
