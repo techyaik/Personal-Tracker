@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { Alert, StyleSheet, Text, View, Platform } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
 import { CATEGORIES, GOALS } from '../../constants/categories';
 import { AppHeader } from '../../components/AppHeader';
@@ -10,10 +10,11 @@ import { Screen } from '../../components/Screen';
 import { SectionHeader } from '../../components/SectionHeader';
 import { useHabits } from '../../hooks/useHabits';
 import { RADIUS, SHADOWS } from '../../constants/theme';
+import { showToast } from '../../utils/feedback';
 
 export default function AddHabit({ navigation }) {
-  const { addHabit } = useHabits();
-  const { colors } = useTheme();
+  const { habits, addHabit } = useHabits();
+  const { colors, triggerDataRefresh } = useTheme();
   
   const [name, setName] = useState('');
   const [category, setCategory] = useState('health');
@@ -33,15 +34,38 @@ export default function AddHabit({ navigation }) {
         return;
       }
     }
-    await addHabit({
-      id: Date.now().toString(),
-      name: name.trim(),
-      category,
-      reminderTime: trimmedTime || null,
-      goal,
-      createdAt: new Date().toISOString(),
-    });
-    navigation.goBack();
+
+    try {
+      const isDuplicate = habits.some((h) => h.name.toLowerCase() === name.trim().toLowerCase());
+      if (isDuplicate) {
+        if (Platform.OS === 'web') {
+          alert('A habit with this name already exists.');
+        } else {
+          Alert.alert('Duplicate habit', 'A habit with this name already exists.');
+        }
+        return;
+      }
+
+      await addHabit({
+        id: Date.now().toString(),
+        name: name.trim(),
+        category,
+        reminderTime: trimmedTime || null,
+        goal,
+        createdAt: new Date().toISOString(),
+      });
+
+      triggerDataRefresh();
+      showToast('Habit added successfully ✓');
+      navigation.goBack();
+    } catch (error) {
+      console.error('Failed to add habit:', error);
+      if (Platform.OS === 'web') {
+        alert('Failed to save habit: ' + error.message);
+      } else {
+        Alert.alert('Error', 'Failed to save habit: ' + error.message);
+      }
+    }
   };
 
   return (

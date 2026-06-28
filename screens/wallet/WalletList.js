@@ -10,6 +10,7 @@ import { Pill } from '../../components/Pill';
 import { Screen } from '../../components/Screen';
 import { SectionHeader } from '../../components/SectionHeader';
 import { WalletBalance } from '../../components/WalletBalance';
+import { WalletPasscodeGate } from '../../components/WalletPasscodeGate';
 import { TransactionItem } from '../../components/TransactionItem';
 import { WalletAccountList } from '../../components/WalletAccountList';
 import { WalletModal } from '../../components/WalletModal';
@@ -28,7 +29,7 @@ const TYPE_FILTERS = [
   { key: 'transfer', label: 'Transfers' },
 ];
 
-export default function WalletList({ navigation }) {
+function WalletContent({ navigation }) {
   const { colors } = useTheme();
   
   // Custom hook manages state automatically (wallets and transactions)
@@ -401,28 +402,40 @@ export default function WalletList({ navigation }) {
       </Screen>
 
       {/* Wallets Creator/Editor Modal */}
-      <WalletModal
-        visible={walletModalVisible}
-        wallet={editingWallet}
-        onClose={() => setWalletModalVisible(false)}
-        onSave={handleSaveWallet}
-        onDelete={handleDeleteWallet}
-        currencySymbol={currency.symbol}
-      />
+      {walletModalVisible && (
+        <WalletModal
+          visible={walletModalVisible}
+          wallet={editingWallet}
+          onClose={() => setWalletModalVisible(false)}
+          onSave={handleSaveWallet}
+          onDelete={handleDeleteWallet}
+          currencySymbol={currency.symbol}
+        />
+      )}
 
       {/* Transactions Creator/Editor Modal */}
-      <TransactionModal
-        visible={txModalVisible}
-        transaction={editingTx}
-        wallets={wallets}
-        onClose={() => setTxModalVisible(false)}
-        onSave={handleSaveTx}
-        currency={currency}
-        currencies={currencies}
-        onCurrencyChange={setCurrency}
-      />
+      {txModalVisible && (
+        <TransactionModal
+          visible={txModalVisible}
+          transaction={editingTx}
+          wallets={wallets}
+          onClose={() => setTxModalVisible(false)}
+          onSave={handleSaveTx}
+          currency={currency}
+          currencies={currencies}
+          onCurrencyChange={setCurrency}
+        />
+      )}
       <FeatureWalkthrough screenKey="wallet" steps={WALKTHROUGH_STEPS.wallet} />
     </View>
+  );
+}
+
+export default function WalletList({ navigation }) {
+  return (
+    <WalletPasscodeGate>
+      <WalletContent navigation={navigation} />
+    </WalletPasscodeGate>
   );
 }
 

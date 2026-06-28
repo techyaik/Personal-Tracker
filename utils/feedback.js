@@ -6,8 +6,39 @@ export const showToast = (message) => {
     return;
   }
   if (Platform.OS === 'web') {
-    alert(message);
+    try {
+      alert(message);
+    } catch (e) {
+      console.log('[Toast Fallback]', message);
+    }
     return;
   }
-  Alert.alert(message);
+  try {
+    Alert.alert(message);
+  } catch (e) {
+    console.log('[Toast Fallback]', message);
+  }
+};
+
+export const safeConfirm = (title, message, onConfirm, cancelText = 'Cancel', confirmText = 'Confirm') => {
+  if (Platform.OS === 'web') {
+    try {
+      const confirmed = window.confirm(`${title}\n\n${message}`);
+      if (confirmed) {
+        onConfirm();
+      }
+    } catch (e) {
+      console.warn('[safeConfirm] window.confirm blocked by browser. Executing action directly.', e);
+      onConfirm();
+    }
+  } else {
+    Alert.alert(
+      title,
+      message,
+      [
+        { text: cancelText, style: 'cancel' },
+        { text: confirmText, style: 'destructive', onPress: onConfirm }
+      ]
+    );
+  }
 };

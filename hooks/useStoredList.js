@@ -16,6 +16,7 @@ export function clearMemoryCache() {
 export function useStoredList(key) {
   const hydratedRef = useRef(Object.prototype.hasOwnProperty.call(memoryCache, key));
   const mountedRef = useRef(true);
+  const savingRef = useRef(false);
   const [items, setItems] = useState(() => memoryCache[key] || []);
   const [loading, setLoading] = useState(!hydratedRef.current);
   
@@ -30,6 +31,8 @@ export function useStoredList(key) {
   }, []);
 
   const refresh = useCallback(async (options = {}) => {
+    // Don't refresh while a save is in progress — prevents stale-read race condition
+    if (savingRef.current) return;
     const silent = options.silent ?? hydratedRef.current;
     if (!silent) setLoading(true);
     const data = await getData(key);
@@ -56,12 +59,29 @@ export function useStoredList(key) {
     }, [refresh])
   );
 
-  const saveAll = async (next) => {
-    memoryCache[key] = next;
-    hydratedRef.current = true;
-    if (mountedRef.current) setItems(next);
-    await setData(key, next);
-  };
+  const saveAll = useCallback(async (updater) => {
+    savingRef.current = true;
+    try {
+      let current = memoryCache[key];
+      if (current === undefined) {
+        current = await getData(key);
+      }
+      
+      let next;
+      if (typeof updater === 'function') {
+        next = updater(current);
+      } else {
+        next = updater;
+      }
+      
+      memoryCache[key] = next;
+      hydratedRef.current = true;
+      if (mountedRef.current) setItems(next);
+      await setData(key, next);
+    } finally {
+      savingRef.current = false;
+    }
+  }, [key]);
 
   return { items, loading, refresh, saveAll };
 }

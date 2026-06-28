@@ -126,8 +126,10 @@ export default function HealthDashboard({ navigation }) {
     syncWatch,
     addLog,
     updateLog,
+    deleteLog,
+    refresh,
   } = useHealth();
-  const { colors } = useTheme();
+  const { colors, triggerDataRefresh } = useTheme();
   const today = getTodayLog();
 
   const [permissionModalVisible, setPermissionModalVisible] = useState(false);
@@ -379,6 +381,26 @@ export default function HealthDashboard({ navigation }) {
       await addLog(newLog);
       showToast(`Mood logged: ${mood} ✓`);
     }
+  };
+
+  const confirmDeleteLog = (log) => {
+    Alert.alert('Delete log?', 'This health log will be removed permanently.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await deleteLog(log.id);
+            triggerDataRefresh();
+            await refresh();
+            showToast('Health log deleted ✓');
+          } catch (error) {
+            Alert.alert('Could not delete log', error.message || 'Please try again.');
+          }
+        },
+      },
+    ]);
   };
 
   return (
@@ -677,7 +699,7 @@ export default function HealthDashboard({ navigation }) {
       <View style={[styles.section, { marginTop: 12 }]}>
         <SectionHeader>Reminders & Summary</SectionHeader>
         
-        <BentoCard style={styles.wideCard}>
+        <BentoCard style={styles.summaryCard}>
           <View style={styles.cardHeader}>
             <View style={styles.flexOne}>
               <SectionHeader>Weekly summary</SectionHeader>
@@ -736,6 +758,21 @@ export default function HealthDashboard({ navigation }) {
               title={displayDate(log.date)}
               subtitle={`${log.weight || '—'} kg · ${log.sleep || '—'} hrs · ${formatSteps(log.steps)} steps${log.mood ? ` · ${log.mood}` : ''}`}
               onPress={() => navigation.navigate('HealthDayDetail', { entryId: log.id })}
+              right={
+                <View style={styles.logActions}>
+                  <Pressable
+                    onPress={(event) => {
+                      event.stopPropagation?.();
+                      confirmDeleteLog(log);
+                    }}
+                    hitSlop={8}
+                    style={[styles.deleteLogButton, { backgroundColor: colors.dangerBg }]}
+                  >
+                    <Ionicons name="trash-outline" size={15} color={colors.danger} />
+                  </Pressable>
+                  <Ionicons name="chevron-forward" size={18} color={colors.textHint} />
+                </View>
+              }
             />
           ))
         ) : (
@@ -750,247 +787,253 @@ export default function HealthDashboard({ navigation }) {
       </View>
       <FeatureWalkthrough screenKey="health" steps={WALKTHROUGH_STEPS.health} />
 
-      <Modal visible={permissionModalVisible} transparent animationType="fade" onRequestClose={() => setPermissionModalVisible(false)}>
-        <View style={[styles.modalBackdrop, { backgroundColor: colors.overlay }]}>
-          <View style={[styles.modalCard, { backgroundColor: colors.white, borderColor: colors.borderLight }]}>
-            <View style={styles.modalHeader}>
-              <View style={[styles.iconWrap, { backgroundColor: colors.accentLight.health }]}>
-                <Ionicons name="watch-outline" size={22} color={colors.health} />
-              </View>
-              <View style={styles.titleColumn}>
-                <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Smartwatch Connection</Text>
-                <Text style={[styles.modalDesc, { color: colors.textSecondary }]}>
-                  Configure your health provider and data permissions.
-                </Text>
-              </View>
-            </View>
-
-            {/* Provider Platform Selection */}
-            <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Choose Provider</Text>
-            <View style={styles.providerRow}>
-              <Pressable
-                onPress={() => setProvider('google_fit')}
-                style={[
-                  styles.providerBtn,
-                  {
-                    borderColor: provider === 'google_fit' ? colors.health : colors.border,
-                    backgroundColor: provider === 'google_fit' ? colors.accentLight.health : colors.transparent,
-                  }
-                ]}
-              >
-                <Ionicons name="logo-google" size={15} color={provider === 'google_fit' ? colors.health : colors.textSecondary} />
-                <Text style={[styles.providerBtnText, { color: provider === 'google_fit' ? colors.health : colors.textPrimary }]}>Google Fit</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => setProvider('bluetooth')}
-                style={[
-                  styles.providerBtn,
-                  {
-                    borderColor: provider === 'bluetooth' ? colors.health : colors.border,
-                    backgroundColor: provider === 'bluetooth' ? colors.accentLight.health : colors.transparent,
-                  }
-                ]}
-              >
-                <Ionicons name="bluetooth" size={15} color={provider === 'bluetooth' ? colors.health : colors.textSecondary} />
-                <Text style={[styles.providerBtnText, { color: provider === 'bluetooth' ? colors.health : colors.textPrimary }]}>Bluetooth</Text>
-              </Pressable>
-            </View>
-
-            {provider === 'google_fit' && (
-              <View style={styles.inputContainer}>
-                <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Google Client ID</Text>
-                <TextInput
-                  style={[styles.textInput, { color: colors.textPrimary, borderColor: colors.border, backgroundColor: colors.surface }]}
-                  placeholder="Paste OAuth Client ID here..."
-                  placeholderTextColor={colors.textHint}
-                  value={clientId}
-                  onChangeText={setClientId}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                />
-                <Text style={[styles.inputHelp, { color: colors.textHint }]}>
-                  Leave empty to test with mock accounts.
-                </Text>
-              </View>
-            )}
-
-            <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Permissions</Text>
-            <View style={styles.permissionsList}>
-              {Object.keys(permissions).map((key) => {
-                const label = key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1');
-                return (
-                  <View key={key} style={[styles.permissionItem, { borderBottomColor: colors.borderLight }]}>
-                    <Text style={[styles.permissionLabel, { color: colors.textPrimary }]}>{label}</Text>
-                    <Switch
-                      value={permissions[key]}
-                      onValueChange={() => togglePermission(key)}
-                      trackColor={{ false: colors.border, true: colors.health }}
-                      thumbColor={colors.white}
-                    />
-                  </View>
-                );
-              })}
-            </View>
-
-            <View style={styles.modalButtonsRow}>
-              <Pressable
-                onPress={() => setPermissionModalVisible(false)}
-                style={[styles.modalBtn, { borderColor: colors.border }]}
-              >
-                <Text style={[styles.modalBtnText, { color: colors.textSecondary }]}>Cancel</Text>
-              </Pressable>
-              <Pressable
-                onPress={handleConnect}
-                style={[styles.modalBtn, { backgroundColor: colors.accentLight.health, borderColor: colors.health }]}
-              >
-                <Text style={[styles.modalBtnText, { color: colors.health }]}>Connect</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Bluetooth Permission Explanation Modal */}
-      <Modal visible={bluetoothExplanationVisible} transparent animationType="fade" onRequestClose={() => setBluetoothExplanationVisible(false)}>
-        <View style={[styles.modalBackdrop, { backgroundColor: colors.overlay }]}>
-          <View style={[styles.modalCard, { backgroundColor: colors.white, borderColor: colors.borderLight }]}>
-            <View style={styles.modalHeader}>
-              <View style={[styles.iconWrap, { backgroundColor: colors.accentLight.health }]}>
-                <Ionicons name="bluetooth" size={24} color={colors.health} />
-              </View>
-              <View style={styles.titleColumn}>
-                <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Bluetooth Permission</Text>
-                <Text style={[styles.modalDesc, { color: colors.textSecondary }]}>
-                  Why does Lifio request Bluetooth access?
-                </Text>
-              </View>
-            </View>
-            <Text style={[styles.body, { color: colors.textSecondary, fontSize: 13, lineHeight: 18 }]}>
-              Lifio requires Bluetooth access to scan for nearby smartwatches, fitness bands, and rings, establish a secure local pairing channel, and periodically synchronize your active steps, distance, calories, sleep logs, and heart rate metrics directly from the device.
-            </Text>
-            <View style={styles.modalButtonsRow}>
-              <Pressable
-                onPress={() => setBluetoothExplanationVisible(false)}
-                style={[styles.modalBtn, { borderColor: colors.border }]}
-              >
-                <Text style={[styles.modalBtnText, { color: colors.textSecondary }]}>Deny</Text>
-              </Pressable>
-              <Pressable
-                onPress={startBluetoothScanFlow}
-                style={[styles.modalBtn, { backgroundColor: colors.accentLight.health, borderColor: colors.health }]}
-              >
-                <Text style={[styles.modalBtnText, { color: colors.health }]}>Allow & Scan</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Bluetooth Scan / Pairing Modal */}
-      <Modal visible={bluetoothScanVisible} transparent animationType="fade" onRequestClose={() => setBluetoothScanVisible(false)}>
-        <View style={[styles.modalBackdrop, { backgroundColor: colors.overlay }]}>
-          <View style={[styles.modalCard, { backgroundColor: colors.white, borderColor: colors.borderLight }]}>
-            <View style={styles.modalHeader}>
-              <View style={[styles.iconWrap, { backgroundColor: colors.accentLight.health }]}>
-                <Ionicons name="bluetooth" size={24} color={colors.health} />
-              </View>
-              <View style={styles.titleColumn}>
-                <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
-                  {pairingDevice ? 'Establishing Link' : 'Bluetooth Scan'}
-                </Text>
-                <Text style={[styles.modalDesc, { color: colors.textSecondary }]}>
-                  {pairingDevice ? `Status: ${pairingStatus}...` : 'Searching for nearby wearable devices...'}
-                </Text>
-              </View>
-            </View>
-
-            {pairingDevice ? (
-              <View style={styles.pairingContainer}>
-                <Text style={[styles.pairingText, { color: colors.textPrimary }]}>
-                  Connecting to <Text style={{ fontWeight: '800' }}>{pairingDevice.name}</Text>
-                </Text>
-                <Text style={[styles.pairingSub, { color: colors.textSecondary }]}>
-                  Please keep your device close and discoverable.
-                </Text>
-                <View style={styles.progressTrack}>
-                  <View
-                    style={[
-                      styles.progressFill,
-                      {
-                        backgroundColor: colors.health,
-                        width: pairingStatus === 'Pairing' ? '35%' : pairingStatus === 'Connecting' ? '70%' : '100%',
-                      }
-                    ]}
-                  />
+      {permissionModalVisible && (
+        <Modal visible={permissionModalVisible} transparent animationType="fade" onRequestClose={() => setPermissionModalVisible(false)}>
+          <View style={[styles.modalBackdrop, { backgroundColor: colors.overlay }]}>
+            <View style={[styles.modalCard, { backgroundColor: colors.white, borderColor: colors.borderLight }]}>
+              <View style={styles.modalHeader}>
+                <View style={[styles.iconWrap, { backgroundColor: colors.accentLight.health }]}>
+                  <Ionicons name="watch-outline" size={22} color={colors.health} />
+                </View>
+                <View style={styles.titleColumn}>
+                  <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Smartwatch Connection</Text>
+                  <Text style={[styles.modalDesc, { color: colors.textSecondary }]}>
+                    Configure your health provider and data permissions.
+                  </Text>
                 </View>
               </View>
-            ) : (
-              <View style={styles.devicesListContainer}>
-                {isScanning ? (
-                  <View style={styles.scanLoading}>
-                    <Ionicons name="sync-outline" size={24} color={colors.health} style={{ marginBottom: 8 }} />
-                    <Text style={[styles.meta, { color: colors.textSecondary, marginTop: 8 }]}>Scanning for active signals...</Text>
-                  </View>
-                ) : scanningError ? (
-                  <View style={styles.scanLoading}>
-                    <Ionicons name="alert-circle-outline" size={28} color={colors.danger} style={{ marginBottom: 8 }} />
-                    <Text style={[styles.meta, { color: colors.textSecondary, textAlign: 'center', marginHorizontal: 12 }]}>{scanningError}</Text>
-                  </View>
-                ) : bluetoothDevices.length ? (
-                  <View style={styles.devicesList}>
-                    {bluetoothDevices.map((device) => (
-                      <Pressable
-                        key={device.id}
-                        onPress={() => handlePairDevice(device)}
-                        style={({ pressed }) => [
-                          styles.deviceItem,
-                          {
-                            borderColor: colors.borderLight,
-                            backgroundColor: pressed ? colors.surface : colors.white,
-                          }
-                        ]}
-                      >
-                        <View style={styles.deviceItemInfo}>
-                          <Ionicons name="watch-outline" size={20} color={colors.health} />
-                          <View>
-                            <Text style={[styles.deviceNameText, { color: colors.textPrimary }]}>{device.name}</Text>
-                            <Text style={[styles.deviceAddressText, { color: colors.textHint }]}>{device.address}</Text>
-                          </View>
-                        </View>
-                        <View style={[styles.pairBadge, { backgroundColor: colors.accentLight.health }]}>
-                          <Text style={[styles.pairBadgeText, { color: colors.health }]}>Pair</Text>
-                        </View>
-                      </Pressable>
-                    ))}
-                  </View>
-                ) : (
-                  <Text style={[styles.meta, { color: colors.textHint, textAlign: 'center', marginVertical: 12 }]}>
-                    No Bluetooth wearables discovered. Make sure Bluetooth is enabled and devices are in pairing mode.
-                  </Text>
-                )}
-              </View>
-            )}
 
-            {!pairingDevice && (
+              {/* Provider Platform Selection */}
+              <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Choose Provider</Text>
+              <View style={styles.providerRow}>
+                <Pressable
+                  onPress={() => setProvider('google_fit')}
+                  style={[
+                    styles.providerBtn,
+                    {
+                      borderColor: provider === 'google_fit' ? colors.health : colors.border,
+                      backgroundColor: provider === 'google_fit' ? colors.accentLight.health : colors.transparent,
+                    }
+                  ]}
+                >
+                  <Ionicons name="logo-google" size={15} color={provider === 'google_fit' ? colors.health : colors.textSecondary} />
+                  <Text style={[styles.providerBtnText, { color: provider === 'google_fit' ? colors.health : colors.textPrimary }]}>Google Fit</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => setProvider('bluetooth')}
+                  style={[
+                    styles.providerBtn,
+                    {
+                      borderColor: provider === 'bluetooth' ? colors.health : colors.border,
+                      backgroundColor: provider === 'bluetooth' ? colors.accentLight.health : colors.transparent,
+                    }
+                  ]}
+                >
+                  <Ionicons name="bluetooth" size={15} color={provider === 'bluetooth' ? colors.health : colors.textSecondary} />
+                  <Text style={[styles.providerBtnText, { color: provider === 'bluetooth' ? colors.health : colors.textPrimary }]}>Bluetooth</Text>
+                </Pressable>
+              </View>
+
+              {provider === 'google_fit' && (
+                <View style={styles.inputContainer}>
+                  <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Google Client ID</Text>
+                  <TextInput
+                    style={[styles.textInput, { color: colors.textPrimary, borderColor: colors.border, backgroundColor: colors.surface }]}
+                    placeholder="Paste OAuth Client ID here..."
+                    placeholderTextColor={colors.textHint}
+                    value={clientId}
+                    onChangeText={setClientId}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                  />
+                  <Text style={[styles.inputHelp, { color: colors.textHint }]}>
+                    Leave empty to test with mock accounts.
+                  </Text>
+                </View>
+              )}
+
+              <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Permissions</Text>
+              <View style={styles.permissionsList}>
+                {Object.keys(permissions).map((key) => {
+                  const label = key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1');
+                  return (
+                    <View key={key} style={[styles.permissionItem, { borderBottomColor: colors.borderLight }]}>
+                      <Text style={[styles.permissionLabel, { color: colors.textPrimary }]}>{label}</Text>
+                      <Switch
+                        value={permissions[key]}
+                        onValueChange={() => togglePermission(key)}
+                        trackColor={{ false: colors.border, true: colors.health }}
+                        thumbColor={colors.white}
+                      />
+                    </View>
+                  );
+                })}
+              </View>
+
               <View style={styles.modalButtonsRow}>
                 <Pressable
-                  onPress={() => setBluetoothScanVisible(false)}
+                  onPress={() => setPermissionModalVisible(false)}
                   style={[styles.modalBtn, { borderColor: colors.border }]}
                 >
-                  <Text style={[styles.modalBtnText, { color: colors.textSecondary }]}>Close</Text>
+                  <Text style={[styles.modalBtnText, { color: colors.textSecondary }]}>Cancel</Text>
+                </Pressable>
+                <Pressable
+                  onPress={handleConnect}
+                  style={[styles.modalBtn, { backgroundColor: colors.accentLight.health, borderColor: colors.health }]}
+                >
+                  <Text style={[styles.modalBtnText, { color: colors.health }]}>Connect</Text>
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      )}
+
+      {/* Bluetooth Permission Explanation Modal */}
+      {bluetoothExplanationVisible && (
+        <Modal visible={bluetoothExplanationVisible} transparent animationType="fade" onRequestClose={() => setBluetoothExplanationVisible(false)}>
+          <View style={[styles.modalBackdrop, { backgroundColor: colors.overlay }]}>
+            <View style={[styles.modalCard, { backgroundColor: colors.white, borderColor: colors.borderLight }]}>
+              <View style={styles.modalHeader}>
+                <View style={[styles.iconWrap, { backgroundColor: colors.accentLight.health }]}>
+                  <Ionicons name="bluetooth" size={24} color={colors.health} />
+                </View>
+                <View style={styles.titleColumn}>
+                  <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Bluetooth Permission</Text>
+                  <Text style={[styles.modalDesc, { color: colors.textSecondary }]}>
+                    Why does Lifio request Bluetooth access?
+                  </Text>
+                </View>
+              </View>
+              <Text style={[styles.body, { color: colors.textSecondary, fontSize: 13, lineHeight: 18 }]}>
+                Lifio requires Bluetooth access to scan for nearby smartwatches, fitness bands, and rings, establish a secure local pairing channel, and periodically synchronize your active steps, distance, calories, sleep logs, and heart rate metrics directly from the device.
+              </Text>
+              <View style={styles.modalButtonsRow}>
+                <Pressable
+                  onPress={() => setBluetoothExplanationVisible(false)}
+                  style={[styles.modalBtn, { borderColor: colors.border }]}
+                >
+                  <Text style={[styles.modalBtnText, { color: colors.textSecondary }]}>Deny</Text>
                 </Pressable>
                 <Pressable
                   onPress={startBluetoothScanFlow}
-                  disabled={isScanning}
-                  style={[styles.modalBtn, { backgroundColor: colors.accentLight.health, borderColor: colors.health, opacity: isScanning ? 0.6 : 1 }]}
+                  style={[styles.modalBtn, { backgroundColor: colors.accentLight.health, borderColor: colors.health }]}
                 >
-                  <Text style={[styles.modalBtnText, { color: colors.health }]}>Rescan</Text>
+                  <Text style={[styles.modalBtnText, { color: colors.health }]}>Allow & Scan</Text>
                 </Pressable>
               </View>
-            )}
+            </View>
           </View>
-        </View>
-      </Modal>
+        </Modal>
+      )}
+
+      {/* Bluetooth Scan / Pairing Modal */}
+      {bluetoothScanVisible && (
+        <Modal visible={bluetoothScanVisible} transparent animationType="fade" onRequestClose={() => setBluetoothScanVisible(false)}>
+          <View style={[styles.modalBackdrop, { backgroundColor: colors.overlay }]}>
+            <View style={[styles.modalCard, { backgroundColor: colors.white, borderColor: colors.borderLight }]}>
+              <View style={styles.modalHeader}>
+                <View style={[styles.iconWrap, { backgroundColor: colors.accentLight.health }]}>
+                  <Ionicons name="bluetooth" size={24} color={colors.health} />
+                </View>
+                <View style={styles.titleColumn}>
+                  <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
+                    {pairingDevice ? 'Establishing Link' : 'Bluetooth Scan'}
+                  </Text>
+                  <Text style={[styles.modalDesc, { color: colors.textSecondary }]}>
+                    {pairingDevice ? `Status: ${pairingStatus}...` : 'Searching for nearby wearable devices...'}
+                  </Text>
+                </View>
+              </View>
+
+              {pairingDevice ? (
+                <View style={styles.pairingContainer}>
+                  <Text style={[styles.pairingText, { color: colors.textPrimary }]}>
+                    Connecting to <Text style={{ fontWeight: '800' }}>{pairingDevice.name}</Text>
+                  </Text>
+                  <Text style={[styles.pairingSub, { color: colors.textSecondary }]}>
+                    Please keep your device close and discoverable.
+                  </Text>
+                  <View style={styles.progressTrack}>
+                    <View
+                      style={[
+                        styles.progressFill,
+                        {
+                          backgroundColor: colors.health,
+                          width: pairingStatus === 'Pairing' ? '35%' : pairingStatus === 'Connecting' ? '70%' : '100%',
+                        }
+                      ]}
+                    />
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.devicesListContainer}>
+                  {isScanning ? (
+                    <View style={styles.scanLoading}>
+                      <Ionicons name="sync-outline" size={24} color={colors.health} style={{ marginBottom: 8 }} />
+                      <Text style={[styles.meta, { color: colors.textSecondary, marginTop: 8 }]}>Scanning for active signals...</Text>
+                    </View>
+                  ) : scanningError ? (
+                    <View style={styles.scanLoading}>
+                      <Ionicons name="alert-circle-outline" size={28} color={colors.danger} style={{ marginBottom: 8 }} />
+                      <Text style={[styles.meta, { color: colors.textSecondary, textAlign: 'center', marginHorizontal: 12 }]}>{scanningError}</Text>
+                    </View>
+                  ) : bluetoothDevices.length ? (
+                    <View style={styles.devicesList}>
+                      {bluetoothDevices.map((device) => (
+                        <Pressable
+                          key={device.id}
+                          onPress={() => handlePairDevice(device)}
+                          style={({ pressed }) => [
+                            styles.deviceItem,
+                            {
+                              borderColor: colors.borderLight,
+                              backgroundColor: pressed ? colors.surface : colors.white,
+                            }
+                          ]}
+                        >
+                          <View style={styles.deviceItemInfo}>
+                            <Ionicons name="watch-outline" size={20} color={colors.health} />
+                            <View>
+                              <Text style={[styles.deviceNameText, { color: colors.textPrimary }]}>{device.name}</Text>
+                              <Text style={[styles.deviceAddressText, { color: colors.textHint }]}>{device.address}</Text>
+                            </View>
+                          </View>
+                          <View style={[styles.pairBadge, { backgroundColor: colors.accentLight.health }]}>
+                            <Text style={[styles.pairBadgeText, { color: colors.health }]}>Pair</Text>
+                          </View>
+                        </Pressable>
+                      ))}
+                    </View>
+                  ) : (
+                    <Text style={[styles.meta, { color: colors.textHint, textAlign: 'center', marginVertical: 12 }]}>
+                      No Bluetooth wearables discovered. Make sure Bluetooth is enabled and devices are in pairing mode.
+                    </Text>
+                  )}
+                </View>
+              )}
+
+              {!pairingDevice && (
+                <View style={styles.modalButtonsRow}>
+                  <Pressable
+                    onPress={() => setBluetoothScanVisible(false)}
+                    style={[styles.modalBtn, { borderColor: colors.border }]}
+                  >
+                    <Text style={[styles.modalBtnText, { color: colors.textSecondary }]}>Close</Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={startBluetoothScanFlow}
+                    disabled={isScanning}
+                    style={[styles.modalBtn, { backgroundColor: colors.accentLight.health, borderColor: colors.health, opacity: isScanning ? 0.6 : 1 }]}
+                  >
+                    <Text style={[styles.modalBtnText, { color: colors.health }]}>Rescan</Text>
+                  </Pressable>
+                </View>
+              )}
+            </View>
+          </View>
+        </Modal>
+      )}
     </Screen>
   );
 }
@@ -1015,6 +1058,12 @@ const styles = StyleSheet.create({
     ...SHADOWS.subtle,
   },
   wideCard: { flexBasis: '100%' },
+  summaryCard: {
+    alignSelf: 'stretch',
+    flexBasis: 'auto',
+    flexGrow: 0,
+    width: '100%',
+  },
   cardHeader: { alignItems: 'flex-start', flexDirection: 'row', gap: 12, justifyContent: 'space-between' },
   cardTitle: { fontSize: 15, fontWeight: '800', lineHeight: 20 },
   largeValue: { fontSize: 24, fontWeight: '900' },
@@ -1036,6 +1085,8 @@ const styles = StyleSheet.create({
   sectionTitleRow: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
   historyButton: { alignItems: 'center', flexDirection: 'row', gap: 2 },
   historyText: { fontSize: 12, fontWeight: '600' },
+  logActions: { alignItems: 'center', flexDirection: 'row', gap: 8 },
+  deleteLogButton: { alignItems: 'center', borderRadius: RADIUS.pill, height: 30, justifyContent: 'center', width: 30 },
   watchStatsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',

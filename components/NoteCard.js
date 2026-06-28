@@ -1,5 +1,5 @@
 import React from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Swipeable } from 'react-native-gesture-handler';
 import { useTheme } from '../theme/ThemeContext';
@@ -12,10 +12,7 @@ export function NoteCard({ note, onPress, onDelete }) {
 
   const renderRightActions = () => (
     <Pressable
-      onPress={() => Alert.alert('Delete note?', 'This cannot be undone.', [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: onDelete },
-      ])}
+      onPress={onDelete}
       style={[styles.delete, { backgroundColor: colors.danger }]}
     >
       <Ionicons name="trash-outline" size={22} color={colors.white} />

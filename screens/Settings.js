@@ -11,7 +11,7 @@ import { Screen } from '../components/Screen';
 import { SectionHeader } from '../components/SectionHeader';
 import { InputField } from '../components/InputField';
 import { getData, setData } from '../storage/storage';
-import { showToast } from '../utils/feedback';
+import { showToast, safeConfirm } from '../utils/feedback';
 import { clearMemoryCache } from '../hooks/useStoredList';
 import { useHealth } from '../hooks/useHealth';
 
@@ -411,32 +411,11 @@ export default function Settings() {
         showToast('Dummy data added successfully ✓');
       } catch (error) {
         console.error('[Settings] Error inputting dummy data:', error);
-        if (Platform.OS === 'web') {
-          alert('Could not add dummy data: ' + (error.message || 'Please try again.'));
-        } else {
-          Alert.alert('Could not add dummy data', error.message || 'Please try again.');
-        }
+        showToast('Could not add dummy data: ' + (error.message || 'Please try again.'));
       }
     };
 
-    if (Platform.OS === 'web') {
-      const confirm = window.confirm(`Input dummy data?\n\n${message}`);
-      if (confirm) {
-        runFill();
-      }
-    } else {
-      Alert.alert(
-        'Input dummy data?',
-        message,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Input Data',
-            onPress: runFill,
-          },
-        ]
-      );
-    }
+    safeConfirm('Input dummy data?', message, runFill, 'Cancel', 'Input Data');
   };
 
   const confirmErase = () => {
@@ -456,33 +435,11 @@ export default function Settings() {
         showToast('Dummy data erased successfully ✓');
       } catch (error) {
         console.error('[Settings] Error erasing dummy data:', error);
-        if (Platform.OS === 'web') {
-          alert('Could not erase dummy data: ' + (error.message || 'Please try again.'));
-        } else {
-          Alert.alert('Could not erase dummy data', error.message || 'Please try again.');
-        }
+        showToast('Could not erase dummy data: ' + (error.message || 'Please try again.'));
       }
     };
 
-    if (Platform.OS === 'web') {
-      const confirm = window.confirm(`Erase dummy data?\n\n${message}`);
-      if (confirm) {
-        runErase();
-      }
-    } else {
-      Alert.alert(
-        'Erase dummy data?',
-        message,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Erase Dummy Data',
-            style: 'destructive',
-            onPress: runErase,
-          },
-        ]
-      );
-    }
+    safeConfirm('Erase dummy data?', message, runErase, 'Cancel', 'Erase Dummy Data');
   };
 
 
@@ -686,7 +643,7 @@ export default function Settings() {
               </Pressable>
             ) : (
               <Pressable
-                onPress={() => navigation.navigate('HealthTab')}
+                onPress={() => navigation.navigate('Main', { screen: 'HealthTab' })}
                 style={[styles.settingsConnectLink, { backgroundColor: colors.accentLight.health, borderColor: colors.health }]}
               >
                 <Text style={[styles.settingsConnectLinkText, { color: colors.health }]}>Connect</Text>
@@ -728,7 +685,10 @@ export default function Settings() {
             </View>
             <Pressable
               onPress={disableDeveloperMode}
-              style={[styles.actionButton, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}
+              style={[
+                styles.actionButton,
+                { backgroundColor: colors.surface, borderColor: colors.borderLight, flex: 0, width: '100%' }
+              ]}
             >
               <Ionicons name="power-outline" size={18} color={colors.textSecondary} />
               <Text style={[styles.actionButtonText, { color: colors.textSecondary }]}>Turn Off Developer Mode</Text>
@@ -755,51 +715,53 @@ export default function Settings() {
         </Pressable>
       </View>
 
-      <Modal visible={passcodeModalVisible} transparent animationType="fade" onRequestClose={() => setPasscodeModalVisible(false)}>
-        <View style={[styles.modalBackdrop, { backgroundColor: colors.overlay }]}>
-          <View style={[styles.modalCard, { backgroundColor: colors.white, borderColor: colors.borderLight }]}>
-            <View style={styles.headerRow}>
-              <View style={[styles.iconWrap, { backgroundColor: colors.accentLight.health }]}>
-                <Ionicons name="lock-closed-outline" size={22} color={colors.health} />
+      {passcodeModalVisible && (
+        <Modal visible={passcodeModalVisible} transparent animationType="fade" onRequestClose={() => setPasscodeModalVisible(false)}>
+          <View style={[styles.modalBackdrop, { backgroundColor: colors.overlay }]}>
+            <View style={[styles.modalCard, { backgroundColor: colors.white, borderColor: colors.borderLight }]}>
+              <View style={styles.headerRow}>
+                <View style={[styles.iconWrap, { backgroundColor: colors.accentLight.health }]}>
+                  <Ionicons name="lock-closed-outline" size={22} color={colors.health} />
+                </View>
+                <View style={styles.titleColumn}>
+                  <Text style={[styles.title, { color: colors.textPrimary }]}>Enable Developer Mode</Text>
+                  <Text style={[styles.cardDesc, { color: colors.textSecondary }]}>Enter the developer passcode to continue.</Text>
+                </View>
               </View>
-              <View style={styles.titleColumn}>
-                <Text style={[styles.title, { color: colors.textPrimary }]}>Enable Developer Mode</Text>
-                <Text style={[styles.cardDesc, { color: colors.textSecondary }]}>Enter the developer passcode to continue.</Text>
-              </View>
-            </View>
-            <InputField
-              value={passcode}
-              onChangeText={(value) => {
-                setPasscode(value);
-                if (passcodeError) setPasscodeError('');
-              }}
-              placeholder="Passcode"
-              secureTextEntry
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-            {passcodeError ? <Text style={[styles.errorText, { color: colors.danger }]}>{passcodeError}</Text> : null}
-            <View style={styles.buttonRow}>
-              <Pressable
-                onPress={() => {
-                  setPasscodeModalVisible(false);
-                  setPasscode('');
-                  setPasscodeError('');
+              <InputField
+                value={passcode}
+                onChangeText={(value) => {
+                  setPasscode(value);
+                  if (passcodeError) setPasscodeError('');
                 }}
-                style={[styles.actionButton, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}
-              >
-                <Text style={[styles.actionButtonText, { color: colors.textSecondary }]}>Cancel</Text>
-              </Pressable>
-              <Pressable
-                onPress={enableDeveloperMode}
-                style={[styles.actionButton, { backgroundColor: colors.accentLight.health, borderColor: colors.health }]}
-              >
-                <Text style={[styles.actionButtonText, { color: colors.health }]}>Enable</Text>
-              </Pressable>
+                placeholder="Passcode"
+                secureTextEntry
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+              {passcodeError ? <Text style={[styles.errorText, { color: colors.danger }]}>{passcodeError}</Text> : null}
+              <View style={styles.buttonRow}>
+                <Pressable
+                  onPress={() => {
+                    setPasscodeModalVisible(false);
+                    setPasscode('');
+                    setPasscodeError('');
+                  }}
+                  style={[styles.actionButton, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}
+                >
+                  <Text style={[styles.actionButtonText, { color: colors.textSecondary }]}>Cancel</Text>
+                </Pressable>
+                <Pressable
+                  onPress={enableDeveloperMode}
+                  style={[styles.actionButton, { backgroundColor: colors.accentLight.health, borderColor: colors.health }]}
+                >
+                  <Text style={[styles.actionButtonText, { color: colors.health }]}>Enable</Text>
+                </Pressable>
+              </View>
             </View>
           </View>
-        </View>
-      </Modal>
+        </Modal>
+      )}
     </Screen>
   );
 }

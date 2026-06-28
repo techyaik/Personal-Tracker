@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { Alert, Platform, StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
 import { CATEGORIES, GOALS } from '../../constants/categories';
 import { AppHeader } from '../../components/AppHeader';
@@ -10,10 +10,11 @@ import { Screen } from '../../components/Screen';
 import { SectionHeader } from '../../components/SectionHeader';
 import { useHabits } from '../../hooks/useHabits';
 import { RADIUS, SHADOWS } from '../../constants/theme';
+import { showToast, safeConfirm } from '../../utils/feedback';
 
 export default function HabitEdit({ navigation, route }) {
   const { habits, updateHabit, deleteHabit } = useHabits();
-  const { colors } = useTheme();
+  const { colors, triggerDataRefresh } = useTheme();
 
   const habit = habits.find((item) => item.id === route.params?.habit?.id) || route.params?.habit;
   const [name, setName] = useState(habit?.name || '');
@@ -34,18 +35,31 @@ export default function HabitEdit({ navigation, route }) {
         return;
       }
     }
-    await updateHabit(habit.id, { name: name.trim(), category, reminderTime: trimmedTime || null, goal });
-    navigation.navigate('HabitsToday');
+    try {
+      await updateHabit(habit.id, { name: name.trim(), category, reminderTime: trimmedTime || null, goal });
+      triggerDataRefresh();
+      showToast('Habit updated ✓');
+      navigation.navigate('HabitsToday');
+    } catch (error) {
+      console.error('Update habit failed:', error);
+      Alert.alert('Error', 'Failed to save habit: ' + error.message);
+    }
   };
 
-  const confirmDelete = () =>
-    Alert.alert('Delete habit?', 'This removes the habit and all completion history.', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: async () => {
+  const confirmDelete = () => {
+    const performDelete = async () => {
+      try {
         await deleteHabit(habit.id);
+        triggerDataRefresh();
+        showToast('Habit deleted ✓');
         navigation.navigate('HabitsToday');
-      } },
-    ]);
+      } catch (error) {
+        console.error('Delete habit failed:', error);
+        showToast('Failed to delete habit: ' + error.message);
+      }
+    };
+    safeConfirm('Delete habit?', 'This removes the habit and all completion history.', performDelete, 'Cancel', 'Delete');
+  };
 
   if (!habit) return null;
 

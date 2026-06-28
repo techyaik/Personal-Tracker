@@ -4,6 +4,7 @@ import { Platform } from 'react-native';
 import { addDays, differenceInCalendarDays, format, parseISO, subDays } from 'date-fns';
 import { useStoredList } from './useStoredList';
 import { todayKey, shouldCountForGoal } from '../utils/dates';
+import { useTheme } from '../theme/ThemeContext';
 
 const HABITS_KEY = 'habits_list';
 const COMPLETIONS_KEY = 'habits_completions';
@@ -14,18 +15,25 @@ export function useHabits() {
   const habits = habitsStore.items;
   const completions = completionsStore.items;
   const loading = habitsStore.loading || completionsStore.loading;
+  const { triggerDataRefresh } = useTheme();
 
   const doneSet = useMemo(
     () => new Set(completions.filter((c) => c.done).map((c) => `${c.habitId}:${c.date}`)),
     [completions]
   );
 
-  const addHabit = async (habit) => habitsStore.saveAll([...habits, habit]);
-  const updateHabit = async (id, updates) =>
-    habitsStore.saveAll(habits.map((habit) => (habit.id === id ? { ...habit, ...updates } : habit)));
+  const addHabit = async (habit) => {
+    await habitsStore.saveAll((current) => [...current, habit]);
+    triggerDataRefresh();
+  };
+  const updateHabit = async (id, updates) => {
+    await habitsStore.saveAll((current) => current.map((h) => (h.id === id ? { ...h, ...updates } : h)));
+    triggerDataRefresh();
+  };
   const deleteHabit = async (id) => {
-    await habitsStore.saveAll(habits.filter((habit) => habit.id !== id));
-    await completionsStore.saveAll(completions.filter((completion) => completion.habitId !== id));
+    await habitsStore.saveAll((current) => current.filter((h) => h.id !== id));
+    await completionsStore.saveAll((current) => current.filter((c) => c.habitId !== id));
+    triggerDataRefresh();
   };
 
   const toggleCompletion = async (habitId, date = todayKey()) => {

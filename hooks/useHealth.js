@@ -1,9 +1,11 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { parseISO } from 'date-fns';
+import { useFocusEffect } from '@react-navigation/native';
 import { useStoredList } from './useStoredList';
 import { todayKey } from '../utils/dates';
 import { fetchGoogleFitData } from '../utils/googleFit';
+import { useTheme } from '../theme/ThemeContext';
 
 const KEY = 'health_logs';
 const WATCH_CONFIG_KEY = 'wearable_config';
@@ -11,45 +13,58 @@ const WATCH_CONFIG_KEY = 'wearable_config';
 export function useHealth() {
   const { items, loading, saveAll, refresh } = useStoredList(KEY);
   const [watchConfig, setWatchConfig] = useState(null);
+  const { dataVersion, triggerDataRefresh } = useTheme();
+
+  const loadWatchConfig = useCallback(async () => {
+    try {
+      const val = await AsyncStorage.getItem(WATCH_CONFIG_KEY);
+      if (val) {
+        const parsed = JSON.parse(val);
+        setWatchConfig(parsed);
+
+        // Bluetooth auto-reconnection recovery
+        if (parsed.connected && parsed.provider === 'bluetooth') {
+          const { attemptAutoReconnect } = require('../utils/bluetoothWearable');
+          const result = await attemptAutoReconnect();
+          const updatedConfig = { ...parsed, status: result ? 'Connected' : 'Disconnected' };
+          setWatchConfig(updatedConfig);
+          await AsyncStorage.setItem(WATCH_CONFIG_KEY, JSON.stringify(updatedConfig));
+        }
+      } else {
+        setWatchConfig(null);
+      }
+    } catch (e) {
+      console.error('Error loading watch config:', e);
+    }
+  }, []);
 
   useEffect(() => {
-    let mounted = true;
-    const loadWatchConfig = async () => {
-      try {
-        const val = await AsyncStorage.getItem(WATCH_CONFIG_KEY);
-        if (mounted && val) {
-          const parsed = JSON.parse(val);
-          setWatchConfig(parsed);
-
-          // Bluetooth auto-reconnection recovery
-          if (parsed.connected && parsed.provider === 'bluetooth') {
-            const { attemptAutoReconnect } = require('../utils/bluetoothWearable');
-            const result = await attemptAutoReconnect();
-            if (mounted) {
-              const updatedConfig = { ...parsed, status: result ? 'Connected' : 'Disconnected' };
-              setWatchConfig(updatedConfig);
-              await AsyncStorage.setItem(WATCH_CONFIG_KEY, JSON.stringify(updatedConfig));
-            }
-          }
-        }
-      } catch (e) {
-        console.error('Error loading watch config:', e);
-      }
-    };
     loadWatchConfig();
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  }, [loadWatchConfig, dataVersion]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadWatchConfig();
+    }, [loadWatchConfig])
+  );
 
   const logs = useMemo(
     () => [...items].sort((a, b) => parseISO(b.date) - parseISO(a.date) || b.createdAt.localeCompare(a.createdAt)),
     [items]
   );
 
-  const addLog = async (log) => saveAll([...items, log]);
-  const updateLog = async (id, updates) => saveAll(items.map((log) => (log.id === id ? { ...log, ...updates } : log)));
-  const deleteLog = async (id) => saveAll(items.filter((log) => log.id !== id));
+  const addLog = async (log) => {
+    await saveAll((current) => [...current, log]);
+    triggerDataRefresh();
+  };
+  const updateLog = async (id, updates) => {
+    await saveAll((current) => current.map((log) => (log.id === id ? { ...log, ...updates } : log)));
+    triggerDataRefresh();
+  };
+  const deleteLog = async (id) => {
+    await saveAll((current) => current.filter((log) => log.id !== id));
+    triggerDataRefresh();
+  };
   const getTodayLog = () => logs.find((log) => log.date === todayKey());
   const getLogsByDate = (date) => logs.filter((log) => log.date === date);
 

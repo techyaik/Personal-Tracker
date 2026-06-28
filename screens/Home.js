@@ -16,15 +16,31 @@ import { RADIUS, SHADOWS } from '../constants/theme';
 import { showToast } from '../utils/feedback';
 import { WALKTHROUGH_STEPS } from '../constants/walkthroughs';
 
+function RevealedWalletHomeBalance() {
+  const { colors } = useTheme();
+  const { wallets, formatMoney } = useWallet();
+
+  const balance = useMemo(
+    () => wallets.reduce((sum, wallet) => sum + (wallet.balance ?? 0), 0),
+    [wallets]
+  );
+
+  return (
+    <Text selectable style={[styles.walletAmount, { color: colors.textPrimary }]}>
+      {formatMoney(balance)}
+    </Text>
+  );
+}
+
 export default function Home({ navigation }) {
   const { colors } = useTheme();
 
   const { habits, completions, getDayCompletionPercent, getStreak, toggleCompletion, isDone } = useHabits();
   const { logs, getTodayLog } = useHealth();
-  const { wallets, transactions, formatMoney } = useWallet();
   const { notes } = useNotes();
 
   const [todayMood, setTodayMood] = React.useState(null);
+  const [walletBalanceVisible, setWalletBalanceVisible] = React.useState(false);
 
   React.useEffect(() => {
     const loadMood = async () => {
@@ -44,19 +60,6 @@ export default function Home({ navigation }) {
   const habitsCompletionPercent = getDayCompletionPercent(todayKey());
 
   const currentNote = notes[0];
-
-  // Calculate wallet running balance
-  const balance = useMemo(() => {
-    return wallets.reduce((sum, w) => sum + (w.balance ?? 0), 0);
-  }, [wallets]);
-
-  const fmt = (n) => {
-    if (formatMoney) return formatMoney(n);
-    return '$' + Number(n).toLocaleString('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-  };
 
   const handleQuickMood = async (moodKey) => {
     try {
@@ -186,7 +189,7 @@ export default function Home({ navigation }) {
         </View>
       </View>
 
-      {/* Third Bento Grid Row: Recent Note & Wallet Balance */}
+      {/* Third Bento Grid Row: Recent Note & Private Wallet Shortcut */}
       <View style={styles.gridRow}>
         {/* Note Card */}
         <View style={[styles.bentoCard, { backgroundColor: colors.white, borderColor: colors.borderLight }]}>
@@ -213,18 +216,50 @@ export default function Home({ navigation }) {
         {/* Wallet Card */}
         <View style={[styles.bentoCard, { backgroundColor: colors.white, borderColor: colors.borderLight }]}>
           <View style={styles.rowBetween}>
-            <Text style={[styles.cardTitle, { color: colors.textSecondary }]}>Wallet Balance</Text>
-            <Pressable onPress={() => navigation.navigate('JournalTab')}>
-              <Ionicons name="arrow-forward" size={14} color={colors.wallet} />
+            <View style={styles.walletTitleRow}>
+              <Text style={[styles.cardTitle, { color: colors.textSecondary }]}>Wallet</Text>
+            </View>
+            <Pressable
+              onPress={() => navigation.navigate('JournalTab')}
+              hitSlop={8}
+              style={({ pressed }) => [
+                styles.walletArrowButton,
+                {
+                  backgroundColor: colors.surface,
+                  opacity: pressed ? 0.72 : 1,
+                },
+              ]}
+            >
+              <Ionicons name="arrow-forward" size={13} color={colors.wallet} />
             </Pressable>
           </View>
-          <View style={styles.previewInfo}>
-            <Text selectable style={[styles.previewTitle, { color: colors.textPrimary, fontSize: 20, fontWeight: '700' }]}>
-              {fmt(balance)}
-            </Text>
-            <Text style={[styles.previewBody, { color: colors.textSecondary, marginTop: 2 }]} numberOfLines={1}>
-              {transactions.length ? `${transactions.length} transactions logged` : 'No transactions logged'}
-            </Text>
+          <View style={styles.walletPreviewInfo}>
+            <View style={styles.walletAmountRow}>
+              {walletBalanceVisible ? (
+                <RevealedWalletHomeBalance />
+              ) : (
+                <Text selectable={false} style={[styles.maskedAmountText, { color: colors.textPrimary }]}>••••</Text>
+              )}
+              <Pressable
+                onPress={() => setWalletBalanceVisible((current) => !current)}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel={walletBalanceVisible ? 'Hide wallet balance' : 'Show wallet balance'}
+                style={({ pressed }) => [
+                  styles.walletEyeButton,
+                  {
+                    backgroundColor: colors.surface,
+                    opacity: pressed ? 0.72 : 1,
+                  },
+                ]}
+              >
+                <Ionicons
+                  name={walletBalanceVisible ? 'eye-off-outline' : 'eye-outline'}
+                  size={13}
+                  color={colors.textSecondary}
+                />
+              </Pressable>
+            </View>
           </View>
         </View>
       </View>
@@ -300,10 +335,12 @@ const styles = StyleSheet.create({
   },
   gridRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
   },
   bentoCard: {
-    flex: 1,
+    flexBasis: 140,
+    flexGrow: 1,
     borderRadius: RADIUS.lg,
     borderWidth: 1,
     padding: 14,
@@ -329,6 +366,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  walletTitleRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 6,
+    minWidth: 0,
+  },
+  walletArrowButton: {
+    alignItems: 'center',
+    borderRadius: RADIUS.pill,
+    height: 24,
+    justifyContent: 'center',
+    width: 24,
   },
   shortcutLink: {
     fontSize: 11,
@@ -431,6 +481,36 @@ const styles = StyleSheet.create({
     marginTop: 8,
     gap: 2,
   },
+  walletPreviewInfo: {
+    alignItems: 'flex-start',
+    gap: 6,
+    marginTop: 10,
+  },
+  walletAmountRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 8,
+    minHeight: 28,
+  },
+  walletAmount: {
+    fontSize: 19,
+    fontWeight: '800',
+    letterSpacing: 0,
+    lineHeight: 24,
+  },
+  walletEyeButton: {
+    alignItems: 'center',
+    borderRadius: RADIUS.pill,
+    height: 24,
+    justifyContent: 'center',
+    width: 24,
+  },
+  maskedAmountText: {
+    fontSize: 20,
+    fontWeight: '800',
+    letterSpacing: 3,
+    lineHeight: 24,
+  },
   previewTitle: {
     fontSize: 12,
     fontWeight: '700',
@@ -460,7 +540,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   shortcutCard: {
-    width: '48%',
+    flexBasis: '47%',
+    flexGrow: 1,
     flexDirection: 'row',
     alignItems: 'center',
     padding: 12,

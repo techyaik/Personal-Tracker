@@ -11,7 +11,7 @@ import { Screen } from '../../components/Screen';
 import { SectionHeader } from '../../components/SectionHeader';
 import { FLOW_LEVELS, ENERGY_LEVELS, HEALTH_MOODS, SYMPTOMS, useHealth } from '../../hooks/useHealth';
 import { displayDate, todayKey } from '../../utils/dates';
-import { showToast } from '../../utils/feedback';
+import { showToast, safeConfirm } from '../../utils/feedback';
 import { RADIUS, SHADOWS } from '../../constants/theme';
 
 const DEFAULTS = {
@@ -34,7 +34,7 @@ const toggleInList = (list, value) =>
 
 export default function HealthLogEntry({ navigation, route }) {
   const { logs, addLog, updateLog, deleteLog } = useHealth();
-  const { colors } = useTheme();
+  const { colors, triggerDataRefresh } = useTheme();
 
   const editing = useMemo(
     () => logs.find((log) => log.id === route.params?.entryId) || route.params?.entry,
@@ -179,17 +179,18 @@ export default function HealthLogEntry({ navigation, route }) {
 
   const confirmDelete = () => {
     if (!editing) return;
-    Alert.alert('Delete log?', 'This health log will be removed permanently.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          await deleteLog(editing.id);
-          navigation.navigate('HealthDashboard');
-        },
-      },
-    ]);
+    const performDelete = async () => {
+      try {
+        await deleteLog(editing.id);
+        triggerDataRefresh();
+        showToast('Health log deleted ✓');
+        navigation.navigate('HealthDashboard');
+      } catch (error) {
+        console.error('Delete health log failed:', error);
+        showToast('Failed to delete log: ' + error.message);
+      }
+    };
+    safeConfirm('Delete log?', 'This health log will be removed permanently.', performDelete, 'Cancel', 'Delete');
   };
 
   return (

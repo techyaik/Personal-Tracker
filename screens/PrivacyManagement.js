@@ -6,7 +6,7 @@ import { AppHeader } from '../components/AppHeader';
 import { Screen } from '../components/Screen';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { getData, setData } from '../storage/storage';
-import { showToast } from '../utils/feedback';
+import { showToast, safeConfirm } from '../utils/feedback';
 import { RADIUS, SHADOWS } from '../constants/theme';
 import { clearMemoryCache } from '../hooks/useStoredList';
 
@@ -61,25 +61,7 @@ export default function PrivacyManagement({ navigation }) {
       showToast(`${label} cleared ✓`);
     };
 
-    if (Platform.OS === 'web') {
-      const confirm = window.confirm(`Clear ${label}?\n\n${message}`);
-      if (confirm) {
-        runClear();
-      }
-    } else {
-      Alert.alert(
-        `Clear ${label}?`,
-        message,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Clear Data',
-            style: 'destructive',
-            onPress: runClear,
-          },
-        ]
-      );
-    }
+    safeConfirm(`Clear ${label}?`, message, runClear, 'Cancel', 'Clear Data');
   };
 
   return (

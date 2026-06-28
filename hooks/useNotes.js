@@ -1,10 +1,13 @@
 import { useMemo } from 'react';
 import { useStoredList } from './useStoredList';
+import { useTheme } from '../theme/ThemeContext';
 
 const KEY = 'notes_list';
 
 export function useNotes() {
   const { items, loading, saveAll, refresh } = useStoredList(KEY);
+  const { triggerDataRefresh } = useTheme();
+
   const notes = useMemo(
     () =>
       [...items].sort((a, b) => {
@@ -18,10 +21,18 @@ export function useNotes() {
     [items]
   );
 
-  const addNote = async (note) => saveAll([...items, note]);
-  const updateNote = async (id, updates) =>
-    saveAll(items.map((note) => (note.id === id ? { ...note, ...updates, updatedAt: new Date().toISOString() } : note)));
-  const deleteNote = async (id) => saveAll(items.filter((note) => note.id !== id));
+  const addNote = async (note) => {
+    await saveAll((current) => [...current, note]);
+    triggerDataRefresh();
+  };
+  const updateNote = async (id, updates) => {
+    await saveAll((current) => current.map((note) => (note.id === id ? { ...note, ...updates, updatedAt: new Date().toISOString() } : note)));
+    triggerDataRefresh();
+  };
+  const deleteNote = async (id) => {
+    await saveAll((current) => current.filter((note) => note.id !== id));
+    triggerDataRefresh();
+  };
   const getAllTags = () => allTags;
 
   return { notes, loading, refresh, addNote, updateNote, deleteNote, getAllTags };

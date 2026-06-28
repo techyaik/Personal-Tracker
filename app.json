@@ -29,7 +29,8 @@
       "favicon": "./assets/lifio-icon.png"
     },
     "plugins": [
-      "expo-font"
+      "expo-font",
+      "expo-secure-store"
     ],
     "extra": {
       "eas": {

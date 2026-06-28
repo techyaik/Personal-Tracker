@@ -7,7 +7,7 @@ import { InputField } from '../../components/InputField';
 import { Pill } from '../../components/Pill';
 import { Screen } from '../../components/Screen';
 import { useNotes } from '../../hooks/useNotes';
-import { showToast } from '../../utils/feedback';
+import { showToast, safeConfirm } from '../../utils/feedback';
 import { RADIUS, SHADOWS } from '../../constants/theme';
 
 const wrap = (text, prefix, suffix = prefix) => (text ? `${prefix}${text}${suffix}` : '');
@@ -65,14 +65,22 @@ export default function NoteEditor({ navigation, route }) {
     navigation.goBack();
   };
 
-  const confirmDelete = () =>
-    Alert.alert('Delete note?', 'This note will be removed permanently.', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: async () => {
+  const confirmDelete = () => {
+    const performDelete = async () => {
+      // Cancel any pending auto-save before deleting
+      clearTimeout(timerRef.current);
+      try {
         await deleteNote(id);
+        showToast('Note deleted ✓');
         navigation.navigate('NotesList');
-      } },
-    ]);
+      } catch (error) {
+        console.error('Delete note failed:', error);
+        showToast('Failed to delete note: ' + error.message);
+      }
+    };
+
+    safeConfirm('Delete note?', 'This note will be removed permanently.', performDelete, 'Cancel', 'Delete');
+  };
 
   const existingTags = getAllTags();
 
@@ -103,18 +111,20 @@ export default function NoteEditor({ navigation, route }) {
         <Tool icon={pinned ? 'pin' : 'pin-outline'} active={pinned} onPress={() => setPinned((current) => !current)} colors={colors} />
         <Tool icon="trash-outline" danger onPress={confirmDelete} colors={colors} />
       </View>
-      <Modal visible={tagModal} transparent animationType="fade">
-        <View style={[styles.modalBackdrop, { backgroundColor: colors.overlay }]}>
-          <Pressable style={StyleSheet.absoluteFill} onPress={() => setTagModal(false)} />
-          <Pressable style={[styles.modalCard, { backgroundColor: colors.white }]}>
-            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Add tag</Text>
-            <InputField value={newTag} onChangeText={setNewTag} placeholder="Tag name" autoFocus />
-            <Pressable onPress={addTag} style={[styles.modalButton, { backgroundColor: colors.notes }]}>
-              <Text style={[styles.modalButtonText, { color: colors.white }]}>Add</Text>
+      {tagModal && (
+        <Modal visible={tagModal} transparent animationType="fade">
+          <View style={[styles.modalBackdrop, { backgroundColor: colors.overlay }]}>
+            <Pressable style={StyleSheet.absoluteFill} onPress={() => setTagModal(false)} />
+            <Pressable style={[styles.modalCard, { backgroundColor: colors.white }]}>
+              <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Add tag</Text>
+              <InputField value={newTag} onChangeText={setNewTag} placeholder="Tag name" autoFocus />
+              <Pressable onPress={addTag} style={[styles.modalButton, { backgroundColor: colors.notes }]}>
+                <Text style={[styles.modalButtonText, { color: colors.white }]}>Add</Text>
+              </Pressable>
             </Pressable>
-          </Pressable>
-        </View>
-      </Modal>
+          </View>
+        </Modal>
+      )}
     </KeyboardAvoidingView>
   );
 }

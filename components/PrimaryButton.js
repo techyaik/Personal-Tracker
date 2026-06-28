@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../theme/ThemeContext';
 import { RADIUS, SHADOWS } from '../constants/theme';
 
-export function PrimaryButton({ title, onPress, color, disabled = false, icon }) {
+export function PrimaryButton({ title, onPress, color, disabled = false, icon, style }) {
   const { colors, gradients, resolveThemeColor, theme } = useTheme();
 
   const activeColor = color ? resolveThemeColor(color) : colors.health;
@@ -29,6 +29,7 @@ export function PrimaryButton({ title, onPress, color, disabled = false, icon })
         styles.button,
         { opacity: pressed ? 0.88 : 1, transform: [{ scale: pressed ? 0.99 : 1 }] },
         disabled ? styles.disabled : SHADOWS.subtle,
+        style,
       ]}
     >
       <LinearGradient

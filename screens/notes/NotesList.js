@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, View } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Alert, FlatList, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme/ThemeContext';
 import { AppHeader } from '../../components/AppHeader';
@@ -13,6 +13,7 @@ import { FAB } from '../../components/FAB';
 import { useNotes } from '../../hooks/useNotes';
 import { RADIUS, SHADOWS } from '../../constants/theme';
 import { WALKTHROUGH_STEPS } from '../../constants/walkthroughs';
+import { showToast, safeConfirm } from '../../utils/feedback';
 
 export default function NotesList({ navigation, route }) {
   const { notes, loading, deleteNote, getAllTags } = useNotes();
@@ -21,6 +22,26 @@ export default function NotesList({ navigation, route }) {
   const [query, setQuery] = useState('');
   const [tag, setTag] = useState(route.params?.tag || 'All');
   const tags = getAllTags();
+
+  useEffect(() => {
+    if (route.params?.tag !== undefined) {
+      setTag(route.params.tag);
+    }
+  }, [route.params?.tag]);
+
+  const handleDelete = (noteId) => {
+    const performDelete = async () => {
+      try {
+        await deleteNote(noteId);
+        showToast('Note deleted ✓');
+      } catch (error) {
+        console.error('Delete note failed:', error);
+        showToast('Failed to delete note: ' + error.message);
+      }
+    };
+
+    safeConfirm('Delete note?', 'This note will be removed permanently.', performDelete, 'Cancel', 'Delete');
+  };
 
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -62,7 +83,7 @@ export default function NotesList({ navigation, route }) {
             <NoteCard
               note={item}
               onPress={() => navigation.navigate('NoteDetail', { note: item })}
-              onDelete={() => deleteNote(item.id)}
+              onDelete={() => handleDelete(item.id)}
             />
           )}
           ListHeaderComponent={header}

@@ -70,7 +70,7 @@ export function FeatureWalkthrough({ screenKey, steps = [] }) {
   const isFirst = index === 0;
   const isLast = index === steps.length - 1;
 
-  return (
+  return visible ? (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={complete}>
       <View style={[styles.overlay, { backgroundColor: colors.overlay }]}>
         <View style={[styles.card, { backgroundColor: colors.white, borderColor: colors.borderLight }]}>
@@ -136,7 +136,7 @@ export function FeatureWalkthrough({ screenKey, steps = [] }) {
         </View>
       </View>
     </Modal>
-  );
+  ) : null;
 }
 
 const styles = StyleSheet.create({

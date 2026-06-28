@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Alert, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Alert, StyleSheet, Text, useWindowDimensions, View, Platform } from 'react-native';
 import { BarChart } from 'react-native-chart-kit';
 import { Ionicons } from '@expo/vector-icons';
 import { addDays, differenceInCalendarDays, parseISO } from 'date-fns';
@@ -12,11 +12,12 @@ import { SectionHeader } from '../../components/SectionHeader';
 import { useHealth } from '../../hooks/useHealth';
 import { displayDate, lastSevenDaysEnding } from '../../utils/dates';
 import { RADIUS, SHADOWS } from '../../constants/theme';
+import { showToast, safeConfirm } from '../../utils/feedback';
 
 export default function HealthDayDetail({ navigation, route }) {
   const { logs, loading, deleteLog } = useHealth();
   const { width } = useWindowDimensions();
-  const { colors } = useTheme();
+  const { colors, triggerDataRefresh } = useTheme();
   
   const entry = logs.find((log) => log.id === route.params?.entryId) || route.params?.entry;
   const cycleInfo = useMemo(() => {
@@ -46,14 +47,21 @@ export default function HealthDayDetail({ navigation, route }) {
   const days = lastSevenDaysEnding(entry.date);
   const weights = days.map((day) => logs.find((log) => log.date === day)?.weight || 0);
 
-  const confirmDelete = () =>
-    Alert.alert('Delete log?', 'This health log will be removed permanently.', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: async () => {
+  const confirmDelete = () => {
+    const performDelete = async () => {
+      try {
         await deleteLog(entry.id);
+        triggerDataRefresh();
+        showToast('Health log deleted successfully ✓');
         navigation.navigate('HealthDashboard');
-      } },
-    ]);
+      } catch (error) {
+        console.error('Delete log failed:', error);
+        showToast('Failed to delete log: ' + error.message);
+      }
+    };
+
+    safeConfirm('Delete log?', 'This health log will be removed permanently.', performDelete, 'Cancel', 'Delete');
+  };
 
   return (
     <Screen loading={loading}>

@@ -13,10 +13,11 @@ import { useHabits } from '../../hooks/useHabits';
 import { displayDate, todayKey, shouldCountForGoal } from '../../utils/dates';
 import { RADIUS, SHADOWS } from '../../constants/theme';
 import { WALKTHROUGH_STEPS } from '../../constants/walkthroughs';
+import { showToast } from '../../utils/feedback';
 
 export default function HabitsToday({ navigation }) {
   const { habits, loading, isDone, toggleCompletion, getStreak, getWeekPercents, deleteHabit } = useHabits();
-  const { colors } = useTheme();
+  const { colors, triggerDataRefresh } = useTheme();
   
   const activeHabits = habits.filter((h) => shouldCountForGoal(todayKey(), h.goal));
   const doneCount = activeHabits.filter((habit) => isDone(habit.id)).length;
@@ -25,7 +26,28 @@ export default function HabitsToday({ navigation }) {
   const quickOptions = (habit) =>
     Alert.alert(habit.name, 'Quick options', [
       { text: 'Edit', onPress: () => navigation.navigate('HabitEdit', { habit }) },
-      { text: 'Delete', style: 'destructive', onPress: () => deleteHabit(habit.id) },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () =>
+          Alert.alert('Delete habit?', 'This removes the habit and all completion history.', [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Delete',
+              style: 'destructive',
+              onPress: async () => {
+                try {
+                  await deleteHabit(habit.id);
+                  triggerDataRefresh();
+                  showToast('Habit deleted ✓');
+                } catch (error) {
+                  console.error('Delete habit failed:', error);
+                  Alert.alert('Error', 'Failed to delete habit: ' + error.message);
+                }
+              },
+            },
+          ]),
+      },
       { text: 'Cancel', style: 'cancel' },
     ]);
 

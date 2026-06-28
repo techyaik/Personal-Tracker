@@ -6,6 +6,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createDrawerNavigator, DrawerContentScrollView } from '@react-navigation/drawer';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme, ThemeProvider } from '../theme/ThemeContext';
+import { useAuthUser } from '../hooks/useAuthUser';
 import { RADIUS, SHADOWS } from '../constants/theme';
 import { HealthStack } from './HealthStack';
 import { HabitsStack } from './HabitsStack';
@@ -15,6 +16,7 @@ import Onboarding from '../screens/Onboarding';
 import Settings from '../screens/Settings';
 import Home from '../screens/Home';
 import Profile from '../screens/Profile';
+import Login from '../screens/Login';
 import MyPlan from '../screens/MyPlan';
 import PrivacyManagement from '../screens/PrivacyManagement';
 import Help from '../screens/Help';
@@ -77,6 +79,7 @@ function MainTabs() {
 function CustomDrawerContent(props) {
   const { state, navigation } = props;
   const { colors } = useTheme();
+  const authUser = useAuthUser();
 
   const activeRoute = state.routes[state.index];
   const activeName = activeRoute.name;
@@ -93,6 +96,7 @@ function CustomDrawerContent(props) {
 
   const menuItems = [
     { name: 'Profile', label: 'Profile', icon: 'person-outline', activeIcon: 'person' },
+    { name: 'Login', label: 'Login', icon: 'log-in-outline', activeIcon: 'log-in' },
     { name: 'MyPlan', label: 'My Plan', icon: 'calendar-outline', activeIcon: 'calendar' },
     { name: 'Settings', label: 'Settings', icon: 'settings-outline', activeIcon: 'settings' },
     { name: 'PrivacyManagement', label: 'Privacy Management', icon: 'shield-checkmark-outline', activeIcon: 'shield-checkmark' },
@@ -105,8 +109,12 @@ function CustomDrawerContent(props) {
       {/* Drawer Header */}
       <View style={[styles.drawerHeader, { borderBottomColor: colors.borderLight }]}>
         <Image source={LOGO} style={styles.drawerLogo} />
-        <Text style={[styles.appName, { color: colors.textPrimary }]}>Lifio</Text>
-        <Text style={[styles.appSubtitle, { color: colors.textSecondary }]}>Mindful Momentum</Text>
+        <Text style={[styles.appName, { color: colors.textPrimary }]} numberOfLines={1}>
+          {authUser.name}
+        </Text>
+        <Text style={[styles.appSubtitle, { color: colors.textSecondary }]} numberOfLines={1}>
+          {authUser.email || 'Lifio Profile'}
+        </Text>
       </View>
 
       <DrawerContentScrollView {...props} contentContainerStyle={styles.scrollContent}>
@@ -193,6 +201,7 @@ function NavigatorContent() {
         >
           <Drawer.Screen name="Main" component={MainTabs} />
           <Drawer.Screen name="Profile" component={Profile} />
+          <Drawer.Screen name="Login" component={Login} />
           <Drawer.Screen name="MyPlan" component={MyPlan} />
           <Drawer.Screen name="Settings" component={Settings} />
           <Drawer.Screen name="PrivacyManagement" component={PrivacyManagement} />

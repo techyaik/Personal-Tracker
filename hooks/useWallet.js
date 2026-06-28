@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { parseISO } from 'date-fns';
+import { useFocusEffect } from '@react-navigation/native';
 import { useStoredList } from './useStoredList';
+import { useTheme } from '../theme/ThemeContext';
 
 const TX_KEY = 'wallet_entries';
 const AC_KEY = 'wallet_accounts';
@@ -28,23 +30,30 @@ export function useWallet() {
   const { items: txItems, loading: txLoading, saveAll: saveTransactions, refresh: refreshTransactions } = useStoredList(TX_KEY);
   const { items: acItems, loading: acLoading, saveAll: saveAccounts, refresh: refreshAccounts } = useStoredList(AC_KEY);
   const [currencyCode, setCurrencyCode] = useState(WALLET_CURRENCIES[0].code);
+  const { dataVersion } = useTheme();
+
+  const loadCurrency = useCallback(async () => {
+    try {
+      const storedCode = await AsyncStorage.getItem(CURRENCY_KEY);
+      if (storedCode && WALLET_CURRENCIES.some((item) => item.code === storedCode)) {
+        setCurrencyCode(storedCode);
+      } else {
+        setCurrencyCode(WALLET_CURRENCIES[0].code);
+      }
+    } catch (error) {
+      console.error('Error reading wallet currency:', error);
+    }
+  }, []);
 
   useEffect(() => {
-    let mounted = true;
-    AsyncStorage.getItem(CURRENCY_KEY)
-      .then((storedCode) => {
-        if (!mounted || !storedCode) return;
-        if (WALLET_CURRENCIES.some((item) => item.code === storedCode)) {
-          setCurrencyCode(storedCode);
-        }
-      })
-      .catch((error) => {
-        console.error('Error reading wallet currency:', error);
-      });
-    return () => {
-      mounted = false;
-    };
-  }, []);
+    loadCurrency();
+  }, [loadCurrency, dataVersion]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadCurrency();
+    }, [loadCurrency])
+  );
 
   const currency = useMemo(
     () => WALLET_CURRENCIES.find((item) => item.code === currencyCode) || WALLET_CURRENCIES[0],
@@ -126,42 +135,49 @@ export function useWallet() {
 
   // Account CRUD operations
   const addWallet = async (wallet) => {
-    const baseAccounts = acItems.length === 0 ? [defaultAccount] : acItems;
-    await saveAccounts([...baseAccounts, wallet]);
+    await saveAccounts((current) => {
+      const baseAccounts = current.length === 0 ? [defaultAccount] : current;
+      return [...baseAccounts, wallet];
+    });
   };
 
   const editWallet = async (id, updated) => {
-    const baseAccounts = acItems.length === 0 ? [defaultAccount] : acItems;
-    await saveAccounts(baseAccounts.map(w => w.id === id ? { ...w, ...updated } : w));
+    await saveAccounts((current) => {
+      const baseAccounts = current.length === 0 ? [defaultAccount] : current;
+      return baseAccounts.map(w => w.id === id ? { ...w, ...updated } : w);
+    });
   };
 
   const deleteWallet = async (id) => {
-    const baseAccounts = acItems.length === 0 ? [defaultAccount] : acItems;
-    const nextAccounts = baseAccounts.filter(w => w.id !== id);
-    await saveAccounts(nextAccounts);
-    // Cascade delete transactions involving this wallet
-    const nextTransactions = txItems.filter(tx => tx.walletId !== id && tx.fromWalletId !== id && tx.toWalletId !== id);
-    await saveTransactions(nextTransactions);
+    await saveAccounts((current) => {
+      const baseAccounts = current.length === 0 ? [defaultAccount] : current;
+      return baseAccounts.filter(w => w.id !== id);
+    });
+    await saveTransactions((current) =>
+      current.filter(tx => tx.walletId !== id && tx.fromWalletId !== id && tx.toWalletId !== id)
+    );
   };
 
   // Transaction CRUD operations
   const addTransaction = async (tx) => {
-    await saveTransactions([tx, ...txItems]);
+    await saveTransactions((current) => [tx, ...current]);
   };
 
   const editTransaction = async (id, updated) => {
-    await saveTransactions(txItems.map(tx => tx.id === id ? { ...tx, ...updated } : tx));
+    await saveTransactions((current) => current.map(tx => tx.id === id ? { ...tx, ...updated } : tx));
   };
 
   const deleteTransaction = async (id) => {
     if (!id) {
       throw new Error('Missing transaction id');
     }
-    const exists = txItems.some(tx => tx.id === id);
-    if (!exists) {
-      throw new Error('Transaction not found');
-    }
-    await saveTransactions(txItems.filter(tx => tx.id !== id));
+    await saveTransactions((current) => {
+      const exists = current.some(tx => tx.id === id);
+      if (!exists) {
+        throw new Error('Transaction not found');
+      }
+      return current.filter(tx => tx.id !== id);
+    });
   };
 
   const refresh = async () => {
