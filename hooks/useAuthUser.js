@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { onAuthStateChanged, updateProfile } from 'firebase/auth';
 import AsyncStorage from '../storage/safeAsyncStorage';
 import { getFirebaseAuth } from '../services/firebaseAuth';
+import { isFirebaseConfigured } from '../services/firebaseConfig';
 
 const getInitials = (value) => {
   const source = String(value || 'User').trim();
@@ -26,6 +27,10 @@ export function useAuthUser() {
 
   useEffect(() => {
     let unsubscribe = null;
+    if (!isFirebaseConfigured()) {
+      setReady(true);
+      return;
+    }
     try {
       const auth = getFirebaseAuth();
       setUser(auth.currentUser || null);
@@ -54,6 +59,9 @@ export function useAuthUser() {
     const trimmed = String(newName || '').trim();
     setLocalName(trimmed);
     await AsyncStorage.setItem('lifio_profile_name', trimmed);
+    if (!isFirebaseConfigured()) {
+      return;
+    }
     try {
       const auth = getFirebaseAuth();
       if (auth.currentUser) {
