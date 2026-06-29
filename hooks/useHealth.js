@@ -10,6 +10,11 @@ import { useTheme } from '../theme/ThemeContext';
 const KEY = 'health_logs';
 const WATCH_CONFIG_KEY = 'wearable_config';
 
+export const HEALTH_MOODS = ['Great', 'Good', 'Okay', 'Low', 'Stressed'];
+export const ENERGY_LEVELS = ['High', 'Steady', 'Low', 'Drained'];
+export const SYMPTOMS = ['Headache', 'Cramps', 'Fatigue', 'Acne', 'Mood changes', 'Sore throat', 'Cough', 'Other'];
+export const FLOW_LEVELS = ['Light', 'Medium', 'Heavy', 'Spotting'];
+
 export function useHealth() {
   const { items, loading, saveAll, refresh } = useStoredList(KEY);
   const [watchConfig, setWatchConfig] = useState(null);

@@ -23,21 +23,32 @@ export default function HabitEdit({ navigation, route }) {
   const [goal, setGoal] = useState(habit?.goal || 'daily');
   const [saving, setSaving] = useState(false);
 
+  const [nameError, setNameError] = useState('');
+  const [timeError, setTimeError] = useState('');
+
   const save = async () => {
+    let hasError = false;
+    setNameError('');
+    setTimeError('');
+
     const trimmedName = name.trim();
     if (!trimmedName) {
-      Alert.alert('Name required', 'Give this habit a name before saving.');
-      return;
+      setNameError('Give this habit a name before saving.');
+      hasError = true;
     }
     if (saving) return;
+
     const trimmedTime = reminderTime.trim();
     if (trimmedTime) {
       const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
       if (!timeRegex.test(trimmedTime)) {
-        Alert.alert('Invalid time format', 'Please enter reminder time in HH:MM format (24-hour, e.g. 07:30 or 18:45).');
-        return;
+        setTimeError('Please enter reminder time in HH:MM format (24-hour, e.g. 07:30 or 18:45).');
+        hasError = true;
       }
     }
+
+    if (hasError) return;
+
     try {
       setSaving(true);
       await updateHabit(habit.id, { name: trimmedName, category, reminderTime: trimmedTime || null, goal });
@@ -75,14 +86,32 @@ export default function HabitEdit({ navigation, route }) {
     <Screen>
       <AppHeader title="Edit habit" onBack={() => navigation.goBack()} />
       <View style={styles.form}>
-        <InputField value={name} onChangeText={setName} placeholder="Habit name" />
+        <InputField
+          value={name}
+          onChangeText={(val) => {
+            setName(val);
+            if (nameError) setNameError('');
+          }}
+          placeholder="Habit name"
+        />
+        {nameError ? <Text style={[styles.errorText, { color: colors.danger }]}>{nameError}</Text> : null}
+
         <SectionHeader>Category</SectionHeader>
         <View style={styles.wrap}>
           {CATEGORIES.map((item) => (
             <Pill key={item.key} label={item.label} palette={item.color} selected={category === item.key} onPress={() => setCategory(item.key)} />
           ))}
         </View>
-        <InputField value={reminderTime} onChangeText={setReminderTime} placeholder="Reminder time, e.g. 07:00" />
+        <InputField
+          value={reminderTime}
+          onChangeText={(val) => {
+            setReminderTime(val);
+            if (timeError) setTimeError('');
+          }}
+          placeholder="Reminder time, e.g. 07:00"
+        />
+        {timeError ? <Text style={[styles.errorText, { color: colors.danger }]}>{timeError}</Text> : null}
+
         <SectionHeader>Goal</SectionHeader>
         <View style={[styles.segment, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}>
           {GOALS.map((item) => {
@@ -130,4 +159,5 @@ const styles = StyleSheet.create({
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   segment: { borderRadius: RADIUS.md, borderWidth: 1, flexDirection: 'row', padding: 4 },
   segmentText: { flex: 1, fontSize: 12, fontWeight: '600', padding: 10, textAlign: 'center', textTransform: 'capitalize' },
+  errorText: { fontSize: 11, fontWeight: '600', marginTop: -4, marginLeft: 4 },
 });

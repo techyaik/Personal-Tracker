@@ -29,6 +29,9 @@ export const resolveColor = (colorStr, colors) => {
     case '#bbbbbb': return colors.textHint;
     case '#c2410c': return colors.danger;
     case '#fff1ec': return colors.dangerBg;
+    case '#854f0b': return colors.pillFitness.text;
+    case '#f1efe8': return colors.pillOther.bg;
+    case '#5f5e5a': return colors.pillOther.text;
     default:
       if (colorStr === '#E6F1FB') return colors.accentLight.health;
       if (colorStr === '#EEEDFE') return colors.accentLight.habits;

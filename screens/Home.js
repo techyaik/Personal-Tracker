@@ -124,11 +124,17 @@ export default function Home({ navigation }) {
         </View>
 
         {/* Habits Progress Card */}
-        <View
-          style={[
+        <Pressable
+          onPress={() => navigation.navigate('HabitsTab')}
+          style={({ pressed }) => [
             styles.bentoCard,
             isNarrow ? styles.fullWidthCard : null,
-            { backgroundColor: colors.white, borderColor: colors.borderLight },
+            {
+              backgroundColor: colors.white,
+              borderColor: colors.borderLight,
+              opacity: pressed ? 0.92 : 1,
+              transform: [{ scale: pressed ? 0.98 : 1 }],
+            },
           ]}
         >
           <View style={styles.rowBetween}>
@@ -149,7 +155,7 @@ export default function Home({ navigation }) {
               <View style={[styles.barFill, { width: `${habitsCompletionPercent}%`, backgroundColor: colors.habits }]} />
             </View>
           </View>
-        </View>
+        </Pressable>
       </View>
 
       {/* Second Bento Grid Row: Health Metrics Grid (Full width) */}
