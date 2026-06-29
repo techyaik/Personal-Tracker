@@ -89,7 +89,7 @@ export function WalletPasscodeGate({ children }) {
       </View>
       <KeyboardAvoidingView
         style={styles.sheetHost}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={12}
       >
         <View style={styles.sheetSpacer} />

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { Alert, StyleSheet, Text, View, KeyboardAvoidingView, Platform } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
 import { CATEGORIES, GOALS } from '../../constants/categories';
 import { AppHeader } from '../../components/AppHeader';
@@ -72,73 +72,78 @@ export default function AddHabit({ navigation }) {
   };
 
   return (
-    <Screen>
-      <AppHeader title="Add habit" onBack={() => navigation.goBack()} />
-      <View style={styles.form}>
-        <InputField
-          value={name}
-          onChangeText={(val) => {
-            setName(val);
-            if (nameError) setNameError('');
-          }}
-          placeholder="Habit name"
-        />
-        {nameError ? <Text style={[styles.errorText, { color: colors.danger }]}>{nameError}</Text> : null}
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: colors.bg }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <Screen>
+        <AppHeader title="Add habit" onBack={() => navigation.goBack()} />
+        <View style={styles.form}>
+          <InputField
+            value={name}
+            onChangeText={(val) => {
+              setName(val);
+              if (nameError) setNameError('');
+            }}
+            placeholder="Habit name"
+          />
+          {nameError ? <Text style={[styles.errorText, { color: colors.danger }]}>{nameError}</Text> : null}
 
-        <SectionHeader>Category</SectionHeader>
-        <View style={styles.wrap}>
-          {CATEGORIES.map((item) => (
-            <Pill
-              key={item.key}
-              label={item.label}
-              palette={item.color}
-              selected={category === item.key}
-              onPress={() => setCategory(item.key)}
-            />
-          ))}
-        </View>
-        <InputField
-          value={reminderTime}
-          onChangeText={(val) => {
-            setReminderTime(val);
-            if (timeError) setTimeError('');
-          }}
-          placeholder="Reminder time, e.g. 07:00"
-        />
-        {timeError ? <Text style={[styles.errorText, { color: colors.danger }]}>{timeError}</Text> : null}
+          <SectionHeader>Category</SectionHeader>
+          <View style={styles.wrap}>
+            {CATEGORIES.map((item) => (
+              <Pill
+                key={item.key}
+                label={item.label}
+                palette={item.color}
+                selected={category === item.key}
+                onPress={() => setCategory(item.key)}
+              />
+            ))}
+          </View>
+          <InputField
+            value={reminderTime}
+            onChangeText={(val) => {
+              setReminderTime(val);
+              if (timeError) setTimeError('');
+            }}
+            placeholder="Reminder time, e.g. 07:00"
+          />
+          {timeError ? <Text style={[styles.errorText, { color: colors.danger }]}>{timeError}</Text> : null}
 
-        <SectionHeader>Goal</SectionHeader>
-        <View style={[styles.segment, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}>
-          {GOALS.map((item) => {
-            const active = goal === item;
-            return (
-              <Text
-                key={item}
-                onPress={() => setGoal(item)}
-                style={[
-                  styles.segmentText,
-                  { color: colors.textSecondary },
-                  active && {
-                    backgroundColor: colors.white,
-                    borderRadius: RADIUS.sm,
-                    color: colors.habits,
-                    ...SHADOWS.subtle,
-                  },
-                ]}
-              >
-                {item}
-              </Text>
-            );
-          })}
+          <SectionHeader>Goal</SectionHeader>
+          <View style={[styles.segment, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}>
+            {GOALS.map((item) => {
+              const active = goal === item;
+              return (
+                <Text
+                  key={item}
+                  onPress={() => setGoal(item)}
+                  style={[
+                    styles.segmentText,
+                    { color: colors.textSecondary },
+                    active && {
+                      backgroundColor: colors.white,
+                      borderRadius: RADIUS.sm,
+                      color: colors.habits,
+                      ...SHADOWS.subtle,
+                    },
+                  ]}
+                >
+                  {item}
+                </Text>
+              );
+            })}
+          </View>
         </View>
-      </View>
-      <PrimaryButton
-        title={saving ? 'Adding habit...' : 'Add habit'}
-        color={colors.habits}
-        onPress={save}
-        disabled={saving}
-      />
-    </Screen>
+        <PrimaryButton
+          title={saving ? 'Adding habit...' : 'Add habit'}
+          color={colors.habits}
+          onPress={save}
+          disabled={saving}
+        />
+      </Screen>
+    </KeyboardAvoidingView>
   );
 }
 

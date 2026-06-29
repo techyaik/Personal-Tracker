@@ -60,6 +60,7 @@ function MainTabs() {
           tabBarLabel: meta?.label || '',
           tabBarLabelStyle: styles.tabLabel,
           tabBarItemStyle: styles.tabItem,
+          tabBarHideOnKeyboard: true,
           tabBarIcon: ({ color, size, focused }) => {
             const iconName = focused ? meta.activeIcon : meta.icon;
             return <Ionicons name={iconName} size={size} color={color} />;

@@ -31,6 +31,14 @@ export function useStoredList(key) {
   const refresh = useCallback(async (options = {}) => {
     // Don't refresh while a save is in progress — prevents stale-read race condition
     if (savingRef.current) return;
+
+    if (options.useCache && memoryCache[key] !== undefined) {
+      const data = memoryCache[key];
+      hydratedRef.current = true;
+      if (mountedRef.current) setItems(data);
+      return data;
+    }
+
     const silent = options.silent ?? hydratedRef.current;
     if (!silent) setLoading(true);
     const data = await getData(key);
@@ -44,15 +52,18 @@ export function useStoredList(key) {
 
   useEffect(() => {
     if (dataVersion > 0) {
-      delete memoryCache[key];
-      refresh({ silent: true });
+      refresh({ silent: true, useCache: true });
     }
-  }, [dataVersion, refresh, key]);
+  }, [dataVersion, refresh]);
 
   useFocusEffect(
     useCallback(() => {
+      if (hydratedRef.current && memoryCache[key] !== undefined) {
+        setItems(memoryCache[key]);
+        return;
+      }
       refresh({ silent: hydratedRef.current });
-    }, [refresh])
+    }, [refresh, key])
   );
 
   const saveAll = useCallback(async (updater) => {

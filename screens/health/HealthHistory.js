@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, FlatList } from 'react-native';
 import { isAfter, parseISO, subMonths, subWeeks } from 'date-fns';
 import { useTheme } from '../../theme/ThemeContext';
 import { AppHeader } from '../../components/AppHeader';
@@ -33,29 +33,38 @@ export default function HealthHistory({ navigation }) {
   }, [logs, filter]);
 
   return (
-    <Screen loading={loading}>
+    <Screen loading={loading} scroll={false} style={styles.screen}>
       <AppHeader title="History" onBack={() => navigation.goBack()} />
       <View style={styles.filters}>
         {['Week', 'Month', 'All'].map((item) => (
           <Pill key={item} label={item} selected={filter === item} onPress={() => setFilter(item)} palette={colors.pillLearning} />
         ))}
       </View>
-      {filtered.length ? (
-        filtered.map((log) => (
+      <FlatList
+        data={filtered}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
           <ListRow
-            key={log.id}
-            title={displayDate(log.date)}
-            subtitle={historySummary(log)}
-            onPress={() => navigation.navigate('HealthDayDetail', { entryId: log.id })}
+            title={displayDate(item.date)}
+            subtitle={historySummary(item)}
+            onPress={() => navigation.navigate('HealthDayDetail', { entryId: item.id })}
           />
-        ))
-      ) : (
-        <EmptyState icon="calendar-outline" message="No health logs in this range." />
-      )}
+        )}
+        ListEmptyComponent={
+          <EmptyState icon="calendar-outline" message="No health logs in this range." />
+        }
+        contentContainerStyle={styles.list}
+        showsVerticalScrollIndicator={false}
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={5}
+      />
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  filters: { flexDirection: 'row', gap: 8 },
+  screen: { paddingHorizontal: 16 },
+  filters: { flexDirection: 'row', gap: 8, marginBottom: 12 },
+  list: { gap: 10, paddingVertical: 10 },
 });

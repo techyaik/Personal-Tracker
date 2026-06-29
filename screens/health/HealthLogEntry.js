@@ -220,7 +220,7 @@ export default function HealthLogEntry({ navigation, route }) {
   };
 
   return (
-    <KeyboardAvoidingView style={[styles.flex, { backgroundColor: colors.bg }]} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+    <KeyboardAvoidingView style={[styles.flex, { backgroundColor: colors.bg }]} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <Screen contentStyle={styles.content}>
         <AppHeader title={editing ? 'Edit health' : 'Log health'} onBack={() => navigation.goBack()} />
 

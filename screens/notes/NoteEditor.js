@@ -106,7 +106,7 @@ export default function NoteEditor({ navigation, route }) {
   const existingTags = getAllTags();
 
   return (
-    <KeyboardAvoidingView style={[styles.flex, { backgroundColor: colors.bg }]} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+    <KeyboardAvoidingView style={[styles.flex, { backgroundColor: colors.bg }]} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <Screen>
         <AppHeader title={note ? 'Edit note' : 'New note'} onBack={saveAndBack} rightText="Save" accent={colors.notes} onRight={saveAndBack} />
         <InputField value={title} onChangeText={setTitle} placeholder="Title" style={[styles.titleInput, { backgroundColor: colors.bg, color: colors.textPrimary }]} />
