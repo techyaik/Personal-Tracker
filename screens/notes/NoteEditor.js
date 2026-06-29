@@ -24,10 +24,16 @@ export default function NoteEditor({ navigation, route }) {
   const [pinned, setPinned] = useState(Boolean(note?.pinned));
   const [tagModal, setTagModal] = useState(false);
   const [newTag, setNewTag] = useState('');
+  const [saving, setSaving] = useState(false);
   const createdRef = useRef(Boolean(note));
   const timerRef = useRef(null);
 
   const persist = async (showMessage = false) => {
+    if (saving) return;
+    const isBlankDraft = !title.trim() && !body.trim() && !tags.length && !pinned;
+    if (isBlankDraft && !createdRef.current) {
+      return false;
+    }
     const now = new Date().toISOString();
     const payload = {
       id,
@@ -38,12 +44,18 @@ export default function NoteEditor({ navigation, route }) {
       createdAt: note?.createdAt || now,
       updatedAt: now,
     };
-    if (createdRef.current) await updateNote(id, payload);
-    else {
-      await addNote(payload);
-      createdRef.current = true;
+    setSaving(true);
+    try {
+      if (createdRef.current) await updateNote(id, payload);
+      else {
+        await addNote(payload);
+        createdRef.current = true;
+      }
+      if (showMessage) showToast('Saved ✓');
+      return true;
+    } finally {
+      setSaving(false);
     }
-    if (showMessage) showToast('Saved ✓');
   };
 
   useEffect(() => {
@@ -61,8 +73,13 @@ export default function NoteEditor({ navigation, route }) {
   };
 
   const saveAndBack = async () => {
-    await persist(true);
-    navigation.goBack();
+    try {
+      await persist(true);
+      navigation.goBack();
+    } catch (error) {
+      console.error('Save note failed:', error);
+      showToast('Could not save note: ' + (error.message || 'Please try again.'));
+    }
   };
 
   const confirmDelete = () => {
@@ -70,6 +87,10 @@ export default function NoteEditor({ navigation, route }) {
       // Cancel any pending auto-save before deleting
       clearTimeout(timerRef.current);
       try {
+        if (!createdRef.current) {
+          navigation.goBack();
+          return;
+        }
         await deleteNote(id);
         showToast('Note deleted ✓');
         navigation.navigate('NotesList');

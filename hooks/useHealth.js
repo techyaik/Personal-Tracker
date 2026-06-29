@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect, useCallback } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from '../storage/safeAsyncStorage';
 import { parseISO } from 'date-fns';
 import { useFocusEffect } from '@react-navigation/native';
 import { useStoredList } from './useStoredList';
@@ -54,11 +54,41 @@ export function useHealth() {
   );
 
   const addLog = async (log) => {
-    await saveAll((current) => [...current, log]);
+    const nextDate = String(log?.date || '').trim();
+    if (!nextDate) {
+      throw new Error('Log date is required.');
+    }
+
+    await saveAll((current) => {
+      const existing = current.find((item) => item.date === nextDate);
+      if (existing) {
+        return current.map((item) =>
+          item.id === existing.id
+            ? {
+                ...existing,
+                ...log,
+                id: existing.id,
+                createdAt: existing.createdAt || log.createdAt,
+                updatedAt: log.updatedAt || new Date().toISOString(),
+              }
+            : item
+        );
+      }
+      return [...current, log];
+    });
     triggerDataRefresh();
   };
   const updateLog = async (id, updates) => {
-    await saveAll((current) => current.map((log) => (log.id === id ? { ...log, ...updates } : log)));
+    const nextDate = updates?.date ? String(updates.date).trim() : null;
+    await saveAll((current) => {
+      const duplicate = nextDate
+        ? current.some((item) => item.id !== id && item.date === nextDate)
+        : false;
+      if (duplicate) {
+        throw new Error('A health log already exists for this date.');
+      }
+      return current.map((log) => (log.id === id ? { ...log, ...updates } : log));
+    });
     triggerDataRefresh();
   };
   const deleteLog = async (id) => {

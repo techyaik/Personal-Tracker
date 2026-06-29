@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
 import { AppHeader } from '../components/AppHeader';
@@ -16,27 +16,15 @@ import { RADIUS, SHADOWS } from '../constants/theme';
 import { showToast } from '../utils/feedback';
 import { WALKTHROUGH_STEPS } from '../constants/walkthroughs';
 
-function RevealedWalletHomeBalance() {
-  const { colors } = useTheme();
-  const { wallets, formatMoney } = useWallet();
-
-  const balance = useMemo(
-    () => wallets.reduce((sum, wallet) => sum + (wallet.balance ?? 0), 0),
-    [wallets]
-  );
-
-  return (
-    <Text selectable style={[styles.walletAmount, { color: colors.textPrimary }]}>
-      {formatMoney(balance)}
-    </Text>
-  );
-}
-
 export default function Home({ navigation }) {
   const { colors } = useTheme();
+  const { width } = useWindowDimensions();
+  const isCompact = width < 390;
+  const isNarrow = width < 360;
 
-  const { habits, completions, getDayCompletionPercent, getStreak, toggleCompletion, isDone } = useHabits();
-  const { logs, getTodayLog } = useHealth();
+  const { habits, getDayCompletionPercent, getStreak, isDone } = useHabits();
+  const { getTodayLog } = useHealth();
+  const { wallets, formatMoney } = useWallet();
   const { notes } = useNotes();
 
   const [todayMood, setTodayMood] = React.useState(null);
@@ -60,6 +48,13 @@ export default function Home({ navigation }) {
   const habitsCompletionPercent = getDayCompletionPercent(todayKey());
 
   const currentNote = notes[0];
+  const totalWalletBalance = useMemo(
+    () => wallets.reduce((sum, wallet) => sum + (wallet.balance ?? 0), 0),
+    [wallets]
+  );
+  const walletSummaryLabel = walletBalanceVisible
+    ? `${wallets.length} ${wallets.length === 1 ? 'account' : 'accounts'} tracked`
+    : 'Hidden for privacy';
 
   const handleQuickMood = async (moodKey) => {
     try {
@@ -70,7 +65,7 @@ export default function Home({ navigation }) {
       setTodayMood(moodKey);
       showToast('Mood logged successfully!');
     } catch (e) {
-      console.log('Error logging quick mood:', e);
+      console.error('Error logging quick mood:', e);
     }
   };
 
@@ -93,7 +88,13 @@ export default function Home({ navigation }) {
       {/* First Bento Grid Row: Mood & Habits Progress */}
       <View style={styles.gridRow}>
         {/* Mood Card */}
-        <View style={[styles.bentoCard, { backgroundColor: colors.white, borderColor: colors.borderLight }]}>
+        <View
+          style={[
+            styles.bentoCard,
+            isNarrow ? styles.fullWidthCard : null,
+            { backgroundColor: colors.white, borderColor: colors.borderLight },
+          ]}
+        >
           <Text style={[styles.cardTitle, { color: colors.textSecondary }]}>Daily Mood</Text>
           {todayMood ? (
             <View style={styles.moodDetail}>
@@ -123,7 +124,13 @@ export default function Home({ navigation }) {
         </View>
 
         {/* Habits Progress Card */}
-        <View style={[styles.bentoCard, { backgroundColor: colors.white, borderColor: colors.borderLight }]}>
+        <View
+          style={[
+            styles.bentoCard,
+            isNarrow ? styles.fullWidthCard : null,
+            { backgroundColor: colors.white, borderColor: colors.borderLight },
+          ]}
+        >
           <View style={styles.rowBetween}>
             <Text style={[styles.cardTitle, { color: colors.textSecondary }]}>Habits Today</Text>
             <View style={[styles.streakBadge, { backgroundColor: colors.accentLight.habits }]}>
@@ -154,7 +161,7 @@ export default function Home({ navigation }) {
           </Pressable>
         </View>
         
-        <View style={styles.metricsContainer}>
+        <View style={[styles.metricsContainer, isCompact ? styles.metricsContainerCompact : null]}>
           <View style={styles.metricItem}>
             <Ionicons name="walk" size={20} color={colors.health} />
             <Text style={[styles.metricValue, { color: colors.textPrimary }]}>
@@ -192,7 +199,13 @@ export default function Home({ navigation }) {
       {/* Third Bento Grid Row: Recent Note & Private Wallet Shortcut */}
       <View style={styles.gridRow}>
         {/* Note Card */}
-        <View style={[styles.bentoCard, { backgroundColor: colors.white, borderColor: colors.borderLight }]}>
+        <View
+          style={[
+            styles.bentoCard,
+            isCompact ? styles.fullWidthCard : null,
+            { backgroundColor: colors.white, borderColor: colors.borderLight },
+          ]}
+        >
           <View style={styles.rowBetween}>
             <Text style={[styles.cardTitle, { color: colors.textSecondary }]}>Notes Summary</Text>
             <Pressable onPress={() => navigation.navigate('NotesTab')}>
@@ -214,41 +227,32 @@ export default function Home({ navigation }) {
         </View>
 
         {/* Wallet Card */}
-        <View style={[styles.bentoCard, { backgroundColor: colors.white, borderColor: colors.borderLight }]}>
+        <View
+          style={[
+            styles.bentoCard,
+            styles.walletCard,
+            isCompact ? styles.fullWidthCard : null,
+            { backgroundColor: colors.white, borderColor: colors.borderLight },
+          ]}
+        >
           <View style={styles.rowBetween}>
             <View style={styles.walletTitleRow}>
+              <View style={[styles.walletBadge, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}>
+                <Ionicons name="wallet-outline" size={13} color={colors.wallet} />
+              </View>
               <Text style={[styles.cardTitle, { color: colors.textSecondary }]}>Wallet</Text>
             </View>
-            <Pressable
-              onPress={() => navigation.navigate('JournalTab')}
-              hitSlop={8}
-              style={({ pressed }) => [
-                styles.walletArrowButton,
-                {
-                  backgroundColor: colors.surface,
-                  opacity: pressed ? 0.72 : 1,
-                },
-              ]}
-            >
-              <Ionicons name="arrow-forward" size={13} color={colors.wallet} />
-            </Pressable>
-          </View>
-          <View style={styles.walletPreviewInfo}>
-            <View style={styles.walletAmountRow}>
-              {walletBalanceVisible ? (
-                <RevealedWalletHomeBalance />
-              ) : (
-                <Text selectable={false} style={[styles.maskedAmountText, { color: colors.textPrimary }]}>••••</Text>
-              )}
+            <View style={styles.walletHeaderActions}>
               <Pressable
                 onPress={() => setWalletBalanceVisible((current) => !current)}
                 hitSlop={8}
                 accessibilityRole="button"
                 accessibilityLabel={walletBalanceVisible ? 'Hide wallet balance' : 'Show wallet balance'}
                 style={({ pressed }) => [
-                  styles.walletEyeButton,
+                  styles.walletIconButton,
                   {
                     backgroundColor: colors.surface,
+                    borderColor: colors.borderLight,
                     opacity: pressed ? 0.72 : 1,
                   },
                 ]}
@@ -258,6 +262,66 @@ export default function Home({ navigation }) {
                   size={13}
                   color={colors.textSecondary}
                 />
+              </Pressable>
+              <Pressable
+                onPress={() => navigation.navigate('JournalTab')}
+                hitSlop={8}
+                style={({ pressed }) => [
+                  styles.walletIconButton,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.borderLight,
+                    opacity: pressed ? 0.72 : 1,
+                  },
+                ]}
+              >
+                <Ionicons name="arrow-forward" size={13} color={colors.wallet} />
+              </Pressable>
+            </View>
+          </View>
+          <View style={[styles.walletHeroPanel, { backgroundColor: colors.white, borderColor: colors.borderLight }]}>
+            <View style={styles.walletTopRow}>
+              <Text style={[styles.walletCaption, { color: colors.textHint }]}>Total balance</Text>
+              <Text style={[styles.walletStatusLabel, { color: colors.textSecondary }]}>
+                {walletBalanceVisible ? 'Visible for this session' : 'Private by default'}
+              </Text>
+            </View>
+
+            <View style={styles.walletAmountBlock}>
+              {walletBalanceVisible ? (
+                <Text selectable style={[styles.walletAmount, { color: colors.textPrimary }]}>
+                  {formatMoney(totalWalletBalance)}
+                </Text>
+              ) : (
+                <Text selectable={false} style={[styles.maskedAmountText, { color: colors.textPrimary }]}>••••</Text>
+              )}
+            </View>
+
+            <View style={[styles.walletFooterRow, isNarrow ? styles.walletFooterStack : null]}>
+              <View style={[styles.walletPrivacyChip, { backgroundColor: colors.surface, borderColor: colors.borderLight }]}>
+                <Ionicons
+                  name={walletBalanceVisible ? 'eye-outline' : 'eye-off-outline'}
+                  size={12}
+                  color={colors.wallet}
+                />
+                <Text style={[styles.walletPrivacyText, { color: colors.wallet }]} numberOfLines={1}>
+                  {walletSummaryLabel}
+                </Text>
+              </View>
+              <Pressable
+                onPress={() => navigation.navigate('JournalTab')}
+                hitSlop={8}
+                style={({ pressed }) => [
+                  styles.walletLinkChip,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.borderLight,
+                    opacity: pressed ? 0.72 : 1,
+                  },
+                ]}
+              >
+                <Text style={[styles.walletLinkText, { color: colors.textPrimary }]}>Open wallet</Text>
+                <Ionicons name="arrow-forward" size={12} color={colors.wallet} />
               </Pressable>
             </View>
           </View>
@@ -269,7 +333,12 @@ export default function Home({ navigation }) {
         <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Quick Actions</Text>
         <View style={styles.shortcutGrid}>
           <Pressable
-            onPress={() => navigation.navigate('HealthTab', { screen: 'HealthLogEntry', params: { date: todayKey() } })}
+            onPress={() =>
+              navigation.navigate('HealthTab', {
+                screen: 'HealthLogEntry',
+                params: today?.id ? { entryId: today.id, entry: today } : { date: todayKey() },
+              })
+            }
             style={[styles.shortcutCard, { backgroundColor: colors.white, borderColor: colors.borderLight }]}
           >
             <Ionicons name="heart" size={18} color={colors.health} />
@@ -338,6 +407,9 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 8,
   },
+  fullWidthCard: {
+    flexBasis: '100%',
+  },
   bentoCard: {
     flexBasis: 140,
     flexGrow: 1,
@@ -373,9 +445,27 @@ const styles = StyleSheet.create({
     gap: 6,
     minWidth: 0,
   },
-  walletArrowButton: {
+  walletCard: {
+    gap: 12,
+    padding: 16,
+  },
+  walletBadge: {
     alignItems: 'center',
     borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    height: 20,
+    justifyContent: 'center',
+    width: 20,
+  },
+  walletHeaderActions: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 6,
+  },
+  walletIconButton: {
+    alignItems: 'center',
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
     height: 24,
     justifyContent: 'center',
     width: 24,
@@ -464,10 +554,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 12,
   },
+  metricsContainerCompact: {
+    flexWrap: 'wrap',
+    rowGap: 12,
+  },
   metricItem: {
     alignItems: 'center',
     flex: 1,
     gap: 4,
+    minWidth: 64,
   },
   metricValue: {
     fontSize: 14,
@@ -481,35 +576,80 @@ const styles = StyleSheet.create({
     marginTop: 8,
     gap: 2,
   },
-  walletPreviewInfo: {
-    alignItems: 'flex-start',
-    gap: 6,
-    marginTop: 10,
+  walletHeroPanel: {
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    gap: 16,
+    padding: 16,
   },
-  walletAmountRow: {
+  walletTopRow: {
     alignItems: 'center',
     flexDirection: 'row',
     gap: 8,
-    minHeight: 28,
+    justifyContent: 'space-between',
   },
-  walletAmount: {
-    fontSize: 19,
-    fontWeight: '800',
-    letterSpacing: 0,
-    lineHeight: 24,
+  walletStatusLabel: {
+    fontSize: 11,
+    fontWeight: '600',
   },
-  walletEyeButton: {
+  walletCaption: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+  },
+  walletPrivacyChip: {
     alignItems: 'center',
     borderRadius: RADIUS.pill,
-    height: 24,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: 5,
+    minHeight: 28,
+    paddingHorizontal: 10,
+  },
+  walletPrivacyText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  walletAmountBlock: {
+    alignItems: 'flex-start',
     justifyContent: 'center',
-    width: 24,
+    minHeight: 48,
+  },
+  walletFooterRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 10,
+    justifyContent: 'space-between',
+  },
+  walletFooterStack: {
+    alignItems: 'flex-start',
+    flexDirection: 'column',
+  },
+  walletLinkChip: {
+    alignItems: 'center',
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: 5,
+    minHeight: 28,
+    paddingHorizontal: 10,
+  },
+  walletLinkText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  walletAmount: {
+    fontSize: 24,
+    fontWeight: '800',
+    letterSpacing: 0,
+    lineHeight: 30,
   },
   maskedAmountText: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: '800',
-    letterSpacing: 3,
-    lineHeight: 24,
+    letterSpacing: 2,
+    lineHeight: 30,
   },
   previewTitle: {
     fontSize: 12,

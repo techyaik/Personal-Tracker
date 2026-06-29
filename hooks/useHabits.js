@@ -23,11 +23,25 @@ export function useHabits() {
   );
 
   const addHabit = async (habit) => {
-    await habitsStore.saveAll((current) => [...current, habit]);
+    const trimmedName = String(habit?.name || '').trim();
+    if (!trimmedName) {
+      throw new Error('Habit name is required.');
+    }
+
+    await habitsStore.saveAll((current) => [...current, { ...habit, name: trimmedName }]);
     triggerDataRefresh();
   };
   const updateHabit = async (id, updates) => {
-    await habitsStore.saveAll((current) => current.map((h) => (h.id === id ? { ...h, ...updates } : h)));
+    await habitsStore.saveAll((current) => {
+      const nextName = updates?.name === undefined ? null : String(updates.name || '').trim();
+      if (updates?.name !== undefined && !nextName) {
+        throw new Error('Habit name is required.');
+      }
+
+      return current.map((habit) =>
+        habit.id === id ? { ...habit, ...updates, ...(nextName ? { name: nextName } : {}) } : habit
+      );
+    });
     triggerDataRefresh();
   };
   const deleteHabit = async (id) => {

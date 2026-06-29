@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from '../storage/safeAsyncStorage';
 import { parseISO } from 'date-fns';
 import { useFocusEffect } from '@react-navigation/native';
 import { useStoredList } from './useStoredList';

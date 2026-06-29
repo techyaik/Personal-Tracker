@@ -6,9 +6,7 @@ import { useTheme } from '../theme/ThemeContext';
 const memoryCache = {};
 
 export function clearMemoryCache() {
-  console.log('[useStoredList] clearMemoryCache called');
   for (const k in memoryCache) {
-    console.log('[useStoredList] deleting cache key:', k);
     delete memoryCache[k];
   }
 }
@@ -45,9 +43,7 @@ export function useStoredList(key) {
   }, [key]);
 
   useEffect(() => {
-    console.log('[useStoredList] dataVersion changed:', dataVersion, 'for key:', key);
     if (dataVersion > 0) {
-      console.log('[useStoredList] clearing cache and refreshing for key:', key);
       delete memoryCache[key];
       refresh({ silent: true });
     }

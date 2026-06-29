@@ -9,7 +9,7 @@ import {
   startOfMonth,
   startOfWeek,
 } from 'date-fns';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from '../../storage/safeAsyncStorage';
 import { useTheme } from '../../theme/ThemeContext';
 import { AppHeader } from '../../components/AppHeader';
 import { EmptyState } from '../../components/EmptyState';
@@ -403,6 +403,14 @@ export default function HealthDashboard({ navigation }) {
     ]);
   };
 
+  const openTodayLog = () => {
+    if (today?.id) {
+      navigation.navigate('HealthLogEntry', { entryId: today.id, entry: today });
+      return;
+    }
+    navigation.navigate('HealthLogEntry', { date: todayKey() });
+  };
+
   return (
     <Screen loading={loading} contentStyle={styles.screenContent}>
       <AppHeader title="Health" />
@@ -413,7 +421,7 @@ export default function HealthDashboard({ navigation }) {
           <Text style={[styles.heroTitle, { color: colors.textPrimary }]}>Daily health overview</Text>
         </View>
         <Pressable
-          onPress={() => navigation.navigate('HealthLogEntry', { date: todayKey() })}
+          onPress={openTodayLog}
           style={[styles.iconButton, { backgroundColor: colors.accentLight.health }]}
         >
           <Ionicons name="add" size={22} color={colors.health} />
@@ -780,7 +788,7 @@ export default function HealthDashboard({ navigation }) {
             icon="heart-outline"
             message="No logs yet. Start tracking today."
             actionLabel="+ Log today"
-            action={() => navigation.navigate('HealthLogEntry', { date: todayKey() })}
+            action={openTodayLog}
             accent={colors.health}
           />
         )}

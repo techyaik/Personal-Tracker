@@ -1,4 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from './safeAsyncStorage';
 
 export const getData = async (key) => {
   try {

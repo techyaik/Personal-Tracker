@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from '../storage/safeAsyncStorage';
 import { Alert, Modal, StyleSheet, Text, View, Switch, Pressable, Platform } from 'react-native';
 import { addDays, format, subDays } from 'date-fns';
 import { Ionicons } from '@expo/vector-icons';
@@ -402,11 +402,8 @@ export default function Settings() {
     const message = 'This will populate habits, health logs, wallet transactions, and notes with realistic dummy records. Existing dummy data will be updated.';
     const runFill = async () => {
       try {
-        console.log('[Settings] Inputting dummy data...');
         await fillDummyData();
-        console.log('[Settings] Dummy data written successfully. Clearing cache...');
         clearMemoryCache();
-        console.log('[Settings] Triggering data refresh...');
         triggerDataRefresh();
         showToast('Dummy data added successfully ✓');
       } catch (error) {
@@ -426,11 +423,8 @@ export default function Settings() {
     const message = 'This will permanently delete all generated Lifio dummy entries. Your own real tracked metrics and notes will not be affected.';
     const runErase = async () => {
       try {
-        console.log('[Settings] Erasing dummy data...');
         await eraseDummyData();
-        console.log('[Settings] Dummy data erased successfully. Clearing cache...');
         clearMemoryCache();
-        console.log('[Settings] Triggering data refresh...');
         triggerDataRefresh();
         showToast('Dummy data erased successfully ✓');
       } catch (error) {

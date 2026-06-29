@@ -1,4 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from '../storage/safeAsyncStorage';
 
 const WALLET_PASSCODE_KEY = 'lifio_wallet_passcode_v1';
 const WALLET_PASSCODE_FALLBACK_KEY = 'lifio_wallet_passcode_fallback_v1';

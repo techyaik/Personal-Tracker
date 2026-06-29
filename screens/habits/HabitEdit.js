@@ -13,7 +13,7 @@ import { RADIUS, SHADOWS } from '../../constants/theme';
 import { showToast, safeConfirm } from '../../utils/feedback';
 
 export default function HabitEdit({ navigation, route }) {
-  const { habits, updateHabit, deleteHabit } = useHabits();
+  const { habits, updateHabit, deleteHabit, refresh } = useHabits();
   const { colors, triggerDataRefresh } = useTheme();
 
   const habit = habits.find((item) => item.id === route.params?.habit?.id) || route.params?.habit;
@@ -21,12 +21,15 @@ export default function HabitEdit({ navigation, route }) {
   const [category, setCategory] = useState(habit?.category || 'health');
   const [reminderTime, setReminderTime] = useState(habit?.reminderTime || '');
   const [goal, setGoal] = useState(habit?.goal || 'daily');
+  const [saving, setSaving] = useState(false);
 
   const save = async () => {
-    if (!name.trim()) {
+    const trimmedName = name.trim();
+    if (!trimmedName) {
       Alert.alert('Name required', 'Give this habit a name before saving.');
       return;
     }
+    if (saving) return;
     const trimmedTime = reminderTime.trim();
     if (trimmedTime) {
       const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
@@ -36,13 +39,17 @@ export default function HabitEdit({ navigation, route }) {
       }
     }
     try {
-      await updateHabit(habit.id, { name: name.trim(), category, reminderTime: trimmedTime || null, goal });
+      setSaving(true);
+      await updateHabit(habit.id, { name: trimmedName, category, reminderTime: trimmedTime || null, goal });
+      await refresh();
       triggerDataRefresh();
       showToast('Habit updated ✓');
       navigation.navigate('HabitsToday');
     } catch (error) {
       console.error('Update habit failed:', error);
       Alert.alert('Error', 'Failed to save habit: ' + error.message);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -50,6 +57,7 @@ export default function HabitEdit({ navigation, route }) {
     const performDelete = async () => {
       try {
         await deleteHabit(habit.id);
+        await refresh();
         triggerDataRefresh();
         showToast('Habit deleted ✓');
         navigation.navigate('HabitsToday');
@@ -100,8 +108,19 @@ export default function HabitEdit({ navigation, route }) {
           })}
         </View>
       </View>
-      <PrimaryButton title="Save changes" color={colors.habits} onPress={save} />
-      <PrimaryButton title="Delete habit" color={colors.danger} onPress={confirmDelete} style={{ marginTop: 8 }} />
+      <PrimaryButton
+        title={saving ? 'Saving changes...' : 'Save changes'}
+        color={colors.habits}
+        onPress={save}
+        disabled={saving}
+      />
+      <PrimaryButton
+        title="Delete habit"
+        color={colors.danger}
+        onPress={confirmDelete}
+        disabled={saving}
+        style={{ marginTop: 8 }}
+      />
     </Screen>
   );
 }

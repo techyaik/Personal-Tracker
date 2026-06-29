@@ -33,7 +33,7 @@ const toggleInList = (list, value) =>
   list.includes(value) ? list.filter((item) => item !== value) : [...list, value];
 
 export default function HealthLogEntry({ navigation, route }) {
-  const { logs, addLog, updateLog, deleteLog } = useHealth();
+  const { logs, addLog, updateLog, deleteLog, refresh } = useHealth();
   const { colors, triggerDataRefresh } = useTheme();
 
   const editing = useMemo(
@@ -64,6 +64,7 @@ export default function HealthLogEntry({ navigation, route }) {
     flowIntensity: '',
     cycleSymptoms: [],
   });
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!editing) return;
@@ -106,7 +107,10 @@ export default function HealthLogEntry({ navigation, route }) {
   };
 
   const save = async () => {
+    if (saving) return;
+
     const trimmedDate = form.date.trim();
+    const existingForDate = logs.find((log) => log.date === trimmedDate && log.id !== editing?.id);
     if (!isValidDate(trimmedDate)) {
       Alert.alert('Invalid date', 'Please enter a valid date in YYYY-MM-DD format.');
       return;
@@ -168,13 +172,34 @@ export default function HealthLogEntry({ navigation, route }) {
       cycleSymptoms: form.cycleSymptoms,
     };
 
-    if (editing) {
-      await updateLog(editing.id, { ...payload, updatedAt: new Date().toISOString() });
-    } else {
-      await addLog({ id: Date.now().toString(), ...payload, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+    try {
+      setSaving(true);
+      if (editing) {
+        await updateLog(editing.id, { ...payload, updatedAt: new Date().toISOString() });
+      } else if (existingForDate) {
+        await updateLog(existingForDate.id, {
+          ...existingForDate,
+          ...payload,
+          updatedAt: new Date().toISOString(),
+        });
+      } else {
+        await addLog({
+          id: Date.now().toString(),
+          ...payload,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
+      }
+      await refresh();
+      triggerDataRefresh();
+      showToast('Health logged ✓');
+      navigation.navigate('HealthDashboard');
+    } catch (error) {
+      console.error('Failed to save health log:', error);
+      Alert.alert('Could not save log', error.message || 'Please try again.');
+    } finally {
+      setSaving(false);
     }
-    showToast('Health logged ✓');
-    navigation.goBack();
   };
 
   const confirmDelete = () => {
@@ -182,6 +207,7 @@ export default function HealthLogEntry({ navigation, route }) {
     const performDelete = async () => {
       try {
         await deleteLog(editing.id);
+        await refresh();
         triggerDataRefresh();
         showToast('Health log deleted ✓');
         navigation.navigate('HealthDashboard');
@@ -301,10 +327,22 @@ export default function HealthLogEntry({ navigation, route }) {
           <InputField value={form.notes} onChangeText={(v) => setValue('notes', v)} placeholder="Anything else about today..." multiline />
         </View>
 
-        <PrimaryButton title="Save log" color={colors.health} onPress={save} icon={<Ionicons name="checkmark-circle" size={18} color={colors.white} />} />
+        <PrimaryButton
+          title={saving ? (editing ? 'Updating log...' : 'Saving log...') : 'Save log'}
+          color={colors.health}
+          onPress={save}
+          disabled={saving}
+          icon={<Ionicons name="checkmark-circle" size={18} color={colors.white} />}
+        />
         {editing ? (
           <View style={styles.deleteWrap}>
-            <PrimaryButton title="Delete log" color={colors.danger} onPress={confirmDelete} icon={<Ionicons name="trash-outline" size={18} color={colors.white} />} />
+            <PrimaryButton
+              title="Delete log"
+              color={colors.danger}
+              onPress={confirmDelete}
+              disabled={saving}
+              icon={<Ionicons name="trash-outline" size={18} color={colors.white} />}
+            />
           </View>
         ) : null}
       </Screen>

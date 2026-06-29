@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View, Share, Image } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from '../storage/safeAsyncStorage';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createDrawerNavigator, DrawerContentScrollView } from '@react-navigation/drawer';
@@ -90,7 +90,7 @@ function CustomDrawerContent(props) {
         message: 'Lifio - A bento-style companion for mindful habits, health logging, and wallet tracking. Download it today!',
       });
     } catch (error) {
-      console.log('Share error:', error);
+      console.error('Share error:', error);
     }
   };
 
@@ -161,7 +161,7 @@ function CustomDrawerContent(props) {
 function NavigatorContent() {
   const [ready, setReady] = useState(false);
   const [onboarded, setOnboarded] = useState(false);
-  const { colors, loading: themeLoading } = useTheme();
+  const { colors, ready: themeReady } = useTheme();
 
   useEffect(() => {
     let mounted = true;
@@ -180,7 +180,7 @@ function NavigatorContent() {
     await AsyncStorage.setItem(ONBOARDING_KEY, 'true');
   };
 
-  if (!ready || themeLoading) {
+  if (!ready || !themeReady) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg }}>
         <ActivityIndicator color={colors.health} />

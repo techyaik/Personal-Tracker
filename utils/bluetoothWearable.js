@@ -129,7 +129,7 @@ export async function attemptAutoReconnect() {
         };
       }
     } catch (e) {
-      console.log('Auto reconnect to paired Bluetooth devices failed:', e);
+      console.warn('Auto reconnect to paired Bluetooth devices failed:', e);
     }
   }
   return null;

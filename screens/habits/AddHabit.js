@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Alert, StyleSheet, Text, View, Platform } from 'react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
 import { CATEGORIES, GOALS } from '../../constants/categories';
 import { AppHeader } from '../../components/AppHeader';
@@ -13,19 +13,23 @@ import { RADIUS, SHADOWS } from '../../constants/theme';
 import { showToast } from '../../utils/feedback';
 
 export default function AddHabit({ navigation }) {
-  const { habits, addHabit } = useHabits();
+  const { addHabit, refresh } = useHabits();
   const { colors, triggerDataRefresh } = useTheme();
   
   const [name, setName] = useState('');
   const [category, setCategory] = useState('health');
   const [reminderTime, setReminderTime] = useState('');
   const [goal, setGoal] = useState('daily');
+  const [saving, setSaving] = useState(false);
 
   const save = async () => {
-    if (!name.trim()) {
+    const trimmedName = name.trim();
+    if (!trimmedName) {
       Alert.alert('Name required', 'Give this habit a name before saving.');
       return;
     }
+    if (saving) return;
+
     const trimmedTime = reminderTime.trim();
     if (trimmedTime) {
       const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
@@ -36,35 +40,25 @@ export default function AddHabit({ navigation }) {
     }
 
     try {
-      const isDuplicate = habits.some((h) => h.name.toLowerCase() === name.trim().toLowerCase());
-      if (isDuplicate) {
-        if (Platform.OS === 'web') {
-          alert('A habit with this name already exists.');
-        } else {
-          Alert.alert('Duplicate habit', 'A habit with this name already exists.');
-        }
-        return;
-      }
-
+      setSaving(true);
       await addHabit({
         id: Date.now().toString(),
-        name: name.trim(),
+        name: trimmedName,
         category,
         reminderTime: trimmedTime || null,
         goal,
         createdAt: new Date().toISOString(),
       });
 
+      await refresh();
       triggerDataRefresh();
       showToast('Habit added successfully ✓');
-      navigation.goBack();
+      navigation.navigate('HabitsToday');
     } catch (error) {
       console.error('Failed to add habit:', error);
-      if (Platform.OS === 'web') {
-        alert('Failed to save habit: ' + error.message);
-      } else {
-        Alert.alert('Error', 'Failed to save habit: ' + error.message);
-      }
+      Alert.alert('Error', 'Failed to save habit: ' + error.message);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -111,7 +105,12 @@ export default function AddHabit({ navigation }) {
           })}
         </View>
       </View>
-      <PrimaryButton title="Add habit" color={colors.habits} onPress={save} />
+      <PrimaryButton
+        title={saving ? 'Adding habit...' : 'Add habit'}
+        color={colors.habits}
+        onPress={save}
+        disabled={saving}
+      />
     </Screen>
   );
 }
